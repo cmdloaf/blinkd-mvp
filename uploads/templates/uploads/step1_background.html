@@ -1,0 +1,11 @@
+{% extends "uploads/base.html" %}
+{% block title %}Step 1 — Product Background{% endblock %}
+{% block content %}
+<h2>Describe your product</h2>
+<p>Include what your product does, its value proposition, target audience, and key use cases.</p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Next: Upload Screenshots</button>
+</form>
+{% endblock %}

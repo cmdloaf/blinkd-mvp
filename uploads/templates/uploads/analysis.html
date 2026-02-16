@@ -1,0 +1,26 @@
+{% extends "uploads/base.html" %}
+{% block title %}Analysis Results{% endblock %}
+{% block content %}
+<h2>UX Analysis — {{ persona_name }}</h2>
+
+{% if analysis %}
+<div class="analysis-section">
+    <div class="analysis-content">{{ analysis.raw_response }}</div>
+</div>
+<p style="color: #888; font-size: 0.8rem;">Generated {{ analysis.created_at }}</p>
+
+<div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+    <form method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-outline">Re-run Analysis</button>
+    </form>
+    <a href="{% url 'uploads:complete' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back to Flow</a>
+</div>
+{% else %}
+<p>No analysis results yet.</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn">Run Analysis</button>
+</form>
+{% endif %}
+{% endblock %}

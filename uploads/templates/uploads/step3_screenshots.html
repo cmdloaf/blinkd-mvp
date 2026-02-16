@@ -1,0 +1,58 @@
+{% extends "uploads/base.html" %}
+{% block title %}Step 3 — Screenshots{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+{% endblock %}
+{% block content %}
+<h2>Upload &amp; order your flow screenshots</h2>
+<p>Select your screenshots, then drag to reorder them into your product flow sequence.</p>
+<form method="post" enctype="multipart/form-data" id="screenshot-form">
+    {% csrf_token %}
+    <input type="file" name="screenshots" id="file-input" multiple accept="image/*">
+    <input type="hidden" name="order" id="order-input">
+    <div id="preview-list" class="screenshot-list"></div>
+    <button type="submit" class="btn" style="margin-top: 1rem;">Submit Flow</button>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var fileInput = document.getElementById("file-input");
+    var previewList = document.getElementById("preview-list");
+    var orderInput = document.getElementById("order-input");
+
+    fileInput.addEventListener("change", function () {
+        previewList.innerHTML = "";
+        Array.from(this.files).forEach(function (file) {
+            var div = document.createElement("div");
+            div.className = "screenshot-item";
+            div.setAttribute("data-name", file.name);
+
+            var img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+
+            var label = document.createElement("small");
+            label.textContent = file.name;
+
+            div.appendChild(img);
+            div.appendChild(label);
+            previewList.appendChild(div);
+        });
+        updateOrder();
+    });
+
+    new Sortable(previewList, {
+        animation: 150,
+        onEnd: updateOrder,
+    });
+
+    function updateOrder() {
+        var items = previewList.querySelectorAll(".screenshot-item");
+        var names = Array.from(items).map(function (el) {
+            return el.getAttribute("data-name");
+        });
+        orderInput.value = names.join(",");
+    }
+});
+</script>
+{% endblock %}

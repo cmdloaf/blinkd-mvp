@@ -1,0 +1,69 @@
+{% extends "uploads/base.html" %}
+{% block title %}Step 2 — Select Persona{% endblock %}
+{% block content %}
+<h2>Choose a persona</h2>
+<p>Select a preset persona for the most accurate findings, or describe your own.</p>
+<form method="post" id="persona-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="persona-cards">
+        {% for key, persona in personas.items %}
+        <label class="persona-card" data-value="{{ key }}">
+            <input type="radio" name="persona_type" value="{{ key }}"
+                   {% if form.persona_type.value == key %}checked{% endif %}>
+            <h3>{{ persona.name }}</h3>
+            <p>{{ persona.description }}</p>
+            <div class="traits">
+                {% for trait in persona.traits %}
+                <span class="trait">{{ trait }}</span>
+                {% endfor %}
+            </div>
+        </label>
+        {% endfor %}
+        <label class="persona-card" data-value="custom">
+            <input type="radio" name="persona_type" value="custom"
+                   {% if form.persona_type.value == "custom" %}checked{% endif %}>
+            <h3>Custom Persona</h3>
+            <p>Describe your own persona to test against.</p>
+            <div class="traits">
+                <span class="trait">User-defined</span>
+            </div>
+            <p class="disclaimer">Custom personas provide less accurate findings since the model isn't specifically trained for them.</p>
+            <div class="custom-textarea {% if form.persona_type.value == 'custom' %}visible{% endif %}" id="custom-textarea">
+                {{ form.custom_persona_description }}
+                {{ form.custom_persona_description.errors }}
+            </div>
+        </label>
+    </div>
+    <button type="submit" class="btn" style="margin-top: 1rem;">Next: Upload Screenshots</button>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var cards = document.querySelectorAll(".persona-card");
+    var customTextarea = document.getElementById("custom-textarea");
+
+    cards.forEach(function (card) {
+        card.addEventListener("click", function () {
+            cards.forEach(function (c) { c.classList.remove("selected"); });
+            card.classList.add("selected");
+            var radio = card.querySelector("input[type=radio]");
+            radio.checked = true;
+
+            if (card.getAttribute("data-value") === "custom") {
+                customTextarea.classList.add("visible");
+            } else {
+                customTextarea.classList.remove("visible");
+            }
+        });
+
+        // Initialize selected state
+        var radio = card.querySelector("input[type=radio]");
+        if (radio.checked) {
+            card.classList.add("selected");
+        }
+    });
+});
+</script>
+{% endblock %}
