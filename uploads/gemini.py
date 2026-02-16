@@ -7,7 +7,7 @@ from .personas import (
     BASE_SIMULATION_PROMPT,
     CUSTOM_STRUCTURING_PROMPT,
     OUTPUT_FORMAT_INSTRUCTIONS,
-    PERSONAS,
+    get_system_prompt,
 )
 
 
@@ -58,10 +58,9 @@ def run_analysis(product_flow):
             output_format=OUTPUT_FORMAT_INSTRUCTIONS,
         )
     else:
-        persona = PERSONAS.get(product_flow.persona_type)
-        if not persona:
+        system_prompt = get_system_prompt(product_flow.persona_type)
+        if not system_prompt:
             return "Error: Unknown persona type."
-        system_prompt = persona["system_prompt"]
 
     # Build content parts: product background text + screenshots as images
     goals_block = f"USER GOALS:\n{product_flow.goals}\n\n" if product_flow.goals else ""

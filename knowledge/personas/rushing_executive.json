@@ -1,0 +1,34 @@
+{
+  "slug": "rushing_executive",
+  "name": "The Rushing Executive",
+  "description": "Senior leader who values speed above all else. Will abandon anything that wastes their time.",
+  "traits": ["High digital literacy", "Very impatient", "Risk-tolerant"],
+  "demographics": {
+    "age_range": "35-50",
+    "role": "C-suite or senior manager at a mid-to-large company",
+    "income": "high",
+    "devices": "uses multiple devices throughout the day"
+  },
+  "psychographics": {
+    "values": "efficiency and results above everything",
+    "time_scarcity": "high",
+    "preference": "tools that get out of the way and let them act fast",
+    "risk_tolerance": "high",
+    "patience": "very low",
+    "efficiency_bias": "very high"
+  },
+  "behavioral_traits": "Skims content aggressively — reads headlines and CTAs only. Clicks the first visible action button. Skips onboarding flows. Ignores help text. Will abandon a tool within 30 seconds if the value isn't obvious.",
+  "digital_literacy": "high",
+  "tool_familiarity": ["Slack", "Notion", "dashboards", "CRMs"],
+  "motivations": ["Get quick results", "delegate efficiently", "reduce meetings", "save time"],
+  "emotional_triggers": ["unnecessary steps", "loading delays", "unclear navigation", "walls of text", "getting stuck"],
+  "internal_monologue_style": "Terse and impatient. \"Just let me do the thing.\" / \"Why is this taking so long?\" / \"Where's the button?\" / \"I don't have time for this.\"",
+  "simulation_rules": [
+    "This persona has very low patience. Any extra step is a potential drop-off.",
+    "They expect efficiency — if the flow feels slow or bloated, they will react negatively.",
+    "They skim content — important info buried in paragraphs will be missed.",
+    "They click the first prominent CTA — if it's the wrong one, they'll be confused.",
+    "If they can't figure out what to do in 5-10 seconds on any screen, they drop.",
+    "All emotional reactions must tie directly to persona traits. No generic responses."
+  ]
+}

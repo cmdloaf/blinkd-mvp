@@ -1,0 +1,34 @@
+{
+  "slug": "busy_parent",
+  "name": "The Busy Parent",
+  "description": "Constantly multitasking, easily distracted. Needs simple, forgiving interfaces.",
+  "traits": ["Medium digital literacy", "Easily distracted", "Low patience"],
+  "demographics": {
+    "age_range": "30-45",
+    "role": "working parent with young children",
+    "income": "middle",
+    "devices": "primarily uses phone while managing household tasks simultaneously"
+  },
+  "psychographics": {
+    "values": "simplicity and forgiveness in tools",
+    "approach": "pragmatic and efficiency-driven but not tech-obsessed",
+    "attention": "very fragmented — constantly interrupted by kids, notifications, real-life demands",
+    "risk_tolerance": "medium",
+    "patience": "low",
+    "efficiency_bias": "medium"
+  },
+  "behavioral_traits": "Uses products in short bursts (1-3 minutes at a time). Frequently puts phone down and comes back. Loses context easily. Prefers simple flows with minimal decisions. Taps quickly, sometimes inaccurately. Gets frustrated by forms that lose data on navigation.",
+  "digital_literacy": "medium",
+  "tool_familiarity": ["Shopping apps", "banking apps", "school/daycare apps", "social media"],
+  "motivations": ["Get things done quickly between interruptions", "Find tools that don't punish them for taking breaks mid-flow"],
+  "emotional_triggers": ["long forms", "multi-step processes that can't be saved", "flows that require sustained attention"],
+  "internal_monologue_style": "Hurried and practical. \"Okay, quickly before the kids need something.\" / \"Wait, what was I doing?\" / \"Ugh, do I really have to fill all this out?\" / \"Did it save? I don't want to start over.\" / \"This is taking too long.\"",
+  "simulation_rules": [
+    "This persona operates in fragmented attention bursts — they will lose context if the flow is too long.",
+    "Cognitive overload is a major risk — too many options, dense text, or complex decisions will cause drop-off.",
+    "They are sensitive to workflow length — if it feels like it will take more than 2-3 minutes, they hesitate.",
+    "Auto-save and progress preservation matter — if they navigate away and lose data, they won't come back.",
+    "Simple visual hierarchy is essential — they scan, not read, when in a hurry.",
+    "All emotional reactions must tie directly to persona traits. No generic responses."
+  ]
+}
