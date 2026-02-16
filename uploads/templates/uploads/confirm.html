@@ -1,0 +1,79 @@
+{% extends "uploads/base.html" %}
+{% block title %}Review & Confirm{% endblock %}
+{% block content %}
+<h2>Review &amp; Confirm</h2>
+<p>Review your settings before sending to AI for analysis.</p>
+
+<div class="confirm-section">
+    <div class="confirm-header">
+        <h3>Product Background</h3>
+        <a href="{% url 'uploads:step1' %}?flow_id={{ flow.id }}&next=confirm" class="btn-outline btn-sm">Edit</a>
+    </div>
+    <div class="confirm-content">{{ flow.product_background }}</div>
+</div>
+
+<div class="confirm-section">
+    <div class="confirm-header">
+        <h3>Screenshots</h3>
+        <a href="{% url 'uploads:step2' flow_id=flow.id %}?next=confirm" class="btn-outline btn-sm">Edit</a>
+    </div>
+    {% if screenshots %}
+    <p>{{ screenshots|length }} screenshot{{ screenshots|length|pluralize }} in order:</p>
+    <div class="screenshot-list">
+        {% for s in screenshots %}
+        <div class="screenshot-item" style="cursor: default;">
+            <img src="{{ s.image.url }}">
+            <small>Step {{ forloop.counter }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No screenshots uploaded.</p>
+    {% endif %}
+</div>
+
+<div class="confirm-section">
+    <div class="confirm-header">
+        <h3>Persona</h3>
+        <a href="{% url 'uploads:step3' flow_id=flow.id %}?next=confirm" class="btn-outline btn-sm">Edit</a>
+    </div>
+    <p><strong>{{ persona_name }}</strong></p>
+    {% if persona_data %}
+    <div class="traits" style="margin-top: 0.5rem;">
+        {% for trait in persona_data.traits %}
+        <span class="trait">{{ trait }}</span>
+        {% endfor %}
+    </div>
+    {% elif flow.persona_type == "custom" and flow.custom_persona_description %}
+    <p class="muted" style="margin-top: 0.25rem;">{{ flow.custom_persona_description }}</p>
+    {% endif %}
+</div>
+
+<div class="confirm-section">
+    <div class="confirm-header">
+        <h3>Goals</h3>
+        <a href="{% url 'uploads:step4' flow_id=flow.id %}?next=confirm" class="btn-outline btn-sm">Edit</a>
+    </div>
+    {% if flow.goals %}
+    <div class="confirm-content">{{ flow.goals }}</div>
+    {% else %}
+    <p class="muted">No goals defined.</p>
+    {% endif %}
+</div>
+
+<div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+    <a href="{% url 'uploads:step4' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
+    {% if has_analysis %}
+    <a href="{% url 'uploads:analysis' flow_id=flow.id %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center;">View Analysis</a>
+    <form method="post" action="{% url 'uploads:analysis' flow_id=flow.id %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-outline">Re-run Analysis</button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'uploads:analysis' flow_id=flow.id %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn">Send to AI for Review</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

@@ -6,8 +6,9 @@ app_name = "uploads"
 
 urlpatterns = [
     path("step1/", views.step1_background, name="step1"),
-    path("step2/<uuid:flow_id>/", views.step2_persona, name="step2"),
-    path("step3/<uuid:flow_id>/", views.step3_screenshots, name="step3"),
-    path("complete/<uuid:flow_id>/", views.step_complete, name="complete"),
+    path("step2/<uuid:flow_id>/", views.step2_screenshots, name="step2"),
+    path("step3/<uuid:flow_id>/", views.step3_persona, name="step3"),
+    path("step4/<uuid:flow_id>/", views.step4_goals, name="step4"),
+    path("confirm/<uuid:flow_id>/", views.confirm, name="confirm"),
     path("analysis/<uuid:flow_id>/", views.analysis_view, name="analysis"),
 ]

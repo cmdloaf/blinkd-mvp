@@ -4,18 +4,185 @@
 <h2>UX Analysis — {{ persona_name }}</h2>
 
 {% if analysis %}
+
+{% if sections and recommendations %}
+{# ── Section Navigation ── #}
+<div class="section-nav">
+    <a href="#recommendations" class="active">Recommendations</a>
+    <a href="#friction">Friction Summary</a>
+    <a href="#simulation">Persona Simulation</a>
+    <a href="#understanding">Product Understanding</a>
+</div>
+
+{# ── RECOMMENDATIONS (Hero Section) ── #}
+<section id="recommendations">
+    <h3>Recommendations</h3>
+
+    {% if recommendations %}
+    <div class="rec-summary">
+        <span><strong>{{ recommendations|length }}</strong> recommendation{{ recommendations|length|pluralize }}</span>
+        {% for r in recommendations %}
+            {% if r.priority == "high" %}
+                {% with high_count=high_count|default:0|add:1 %}{% endwith %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% for rec in recommendations %}
+    <div class="rec-card rec-priority-{{ rec.priority }}">
+        <div class="rec-header">
+            <span class="rec-number">#{{ rec.number }}</span>
+            <span class="rec-priority priority-{{ rec.priority }}">
+                {% if rec.priority == "high" %}HIGH{% elif rec.priority == "med" %}MED{% else %}LOW{% endif %}
+            </span>
+        </div>
+
+        {% if rec.observed_problem %}
+        <div class="rec-field">
+            <span class="rec-label">Observed Problem</span>
+            <p>{{ rec.observed_problem }}</p>
+        </div>
+        {% endif %}
+
+        {% if rec.why_it_happens %}
+        <div class="rec-field">
+            <span class="rec-label">Why It Happens</span>
+            <p>{{ rec.why_it_happens }}</p>
+        </div>
+        {% endif %}
+
+        {% if rec.violated_pattern %}
+        <div class="rec-field">
+            <span class="rec-label">Violated UX Pattern</span>
+            <p>{{ rec.violated_pattern }}</p>
+        </div>
+        {% endif %}
+
+        {% if rec.actionable_fix %}
+        <div class="rec-field">
+            <span class="rec-label">Actionable Fix</span>
+            <p>{{ rec.actionable_fix }}</p>
+        </div>
+        {% endif %}
+
+        {% if rec.expected_impact %}
+        <div class="rec-field">
+            <span class="rec-label">Expected Impact</span>
+            <p>{{ rec.expected_impact }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+</section>
+
+{# ── FRICTION SUMMARY ── #}
+<section id="friction">
+    <h3>Friction Summary</h3>
+
+    {% if friction_items %}
+    {% for item in friction_items %}
+    <div class="friction-card friction-{{ item.severity }}">
+        <div class="friction-header">
+            <span class="rec-priority priority-{{ item.severity }}">
+                {% if item.severity == "high" %}HIGH{% elif item.severity == "med" %}MED{% else %}LOW{% endif %}
+            </span>
+        </div>
+        {% if item.description %}
+        <div class="rec-field">
+            <span class="rec-label">Issue</span>
+            <p>{{ item.description }}</p>
+        </div>
+        {% endif %}
+        {% if item.root_cause %}
+        <div class="rec-field">
+            <span class="rec-label">Root Cause</span>
+            <p>{{ item.root_cause }}</p>
+        </div>
+        {% endif %}
+        {% if item.persona_reasoning %}
+        <div class="rec-field">
+            <span class="rec-label">Why This Persona Struggles</span>
+            <p>{{ item.persona_reasoning }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="muted">{{ sections.friction_summary }}</p>
+    {% endif %}
+</section>
+
+{# ── PERSONA SIMULATION ── #}
+<section id="simulation">
+    <h3>Persona Simulation</h3>
+
+    {% if simulation_steps %}
+    {% for step in simulation_steps %}
+    <div class="sim-step">
+        <div class="sim-header">
+            <span class="sim-step-num">Step {{ step.step }}</span>
+            <span class="sim-verdict {{ step.verdict_class }}">{{ step.verdict }}</span>
+        </div>
+        {% if step.inner_monologue %}
+        <div class="sim-monologue">"{{ step.inner_monologue }}"</div>
+        {% endif %}
+        <div class="sim-details">
+            {% if step.expectation %}
+            <div class="rec-field">
+                <span class="rec-label">Expectation</span>
+                <p>{{ step.expectation }}</p>
+            </div>
+            {% endif %}
+            {% if step.hesitation and step.hesitation != "None" %}
+            <div class="rec-field">
+                <span class="rec-label">Hesitation</span>
+                <p>{{ step.hesitation }}</p>
+            </div>
+            {% endif %}
+            {% if step.confusion and step.confusion != "None" %}
+            <div class="rec-field">
+                <span class="rec-label">Confusion</span>
+                <p>{{ step.confusion }}</p>
+            </div>
+            {% endif %}
+            {% if step.emotional_state %}
+            <div class="rec-field">
+                <span class="rec-label">Emotional State</span>
+                <p>{{ step.emotional_state }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="muted">{{ sections.persona_simulation }}</p>
+    {% endif %}
+</section>
+
+{# ── PRODUCT UNDERSTANDING ── #}
+<section id="understanding">
+    <h3>Product Understanding</h3>
+    <div class="understanding-content">{{ sections.product_understanding }}</div>
+</section>
+
+{% else %}
+{# ── Fallback: raw text if parsing failed ── #}
 <div class="analysis-section">
     <div class="analysis-content">{{ analysis.raw_response }}</div>
 </div>
-<p style="color: #888; font-size: 0.8rem;">Generated {{ analysis.created_at }}</p>
+{% endif %}
 
-<div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+<p class="muted" style="margin-top: 1.5rem;">Generated {{ analysis.created_at }}</p>
+
+<div style="margin-top: 1rem; display: flex; gap: 1rem;">
     <form method="post" style="display: inline;">
         {% csrf_token %}
         <button type="submit" class="btn-outline">Re-run Analysis</button>
     </form>
-    <a href="{% url 'uploads:complete' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back to Flow</a>
+    <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back to Flow</a>
 </div>
+
 {% else %}
 <p>No analysis results yet.</p>
 <form method="post">

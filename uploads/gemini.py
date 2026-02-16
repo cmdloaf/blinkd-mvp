@@ -64,9 +64,11 @@ def run_analysis(product_flow):
         system_prompt = persona["system_prompt"]
 
     # Build content parts: product background text + screenshots as images
+    goals_block = f"USER GOALS:\n{product_flow.goals}\n\n" if product_flow.goals else ""
     contents = [
         f"PRODUCT BACKGROUND:\n{product_flow.product_background}\n\n"
-        f"The following {len(screenshots)} screenshot(s) show the product flow in order. "
+        + goals_block
+        + f"The following {len(screenshots)} screenshot(s) show the product flow in order. "
         "Evaluate each step as this persona would experience it:\n",
     ]
 

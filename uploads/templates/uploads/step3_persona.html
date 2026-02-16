@@ -1,5 +1,5 @@
 {% extends "uploads/base.html" %}
-{% block title %}Step 2 — Select Persona{% endblock %}
+{% block title %}Step 3 — Select Persona{% endblock %}
 {% block content %}
 <h2>Choose a persona</h2>
 <p>Select a preset persona for the most accurate findings, or describe your own.</p>
@@ -35,7 +35,10 @@
             </div>
         </label>
     </div>
-    <button type="submit" class="btn" style="margin-top: 1rem;">Next: Upload Screenshots</button>
+    <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+        <a href="{% url 'uploads:step2' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
+        <button type="submit" class="btn">Next: Define Goals</button>
+    </div>
 </form>
 {% endblock %}
 {% block extra_js %}

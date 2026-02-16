@@ -19,6 +19,21 @@ class ProductBackgroundForm(forms.ModelForm):
         }
 
 
+class GoalsForm(forms.ModelForm):
+    class Meta:
+        model = ProductFlow
+        fields = ["goals"]
+        widgets = {
+            "goals": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": (
+                    "e.g. Complete a purchase, Sign up for a free trial, "
+                    "Find and compare pricing plans..."
+                ),
+            }),
+        }
+
+
 class PersonaSelectionForm(forms.Form):
     persona_type = forms.ChoiceField(
         choices=PERSONA_CHOICES,

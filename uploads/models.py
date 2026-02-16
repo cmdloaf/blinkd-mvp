@@ -12,6 +12,10 @@ class ProductFlow(models.Model):
     )
     persona_type = models.CharField(max_length=50, choices=PERSONA_CHOICES, default="")
     custom_persona_description = models.TextField(blank=True, default="")
+    goals = models.TextField(
+        blank=True, default="",
+        help_text="What the persona should be able to achieve with this flow",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

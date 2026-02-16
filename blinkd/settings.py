@@ -133,5 +133,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Gemini API
+# LLM API — use LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY=... to use Claude instead of Gemini
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini").strip().lower()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")

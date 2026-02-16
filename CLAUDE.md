@@ -19,6 +19,18 @@ Blinkd is NOT a general advisor. It is a controlled UX diagnostic system.
 Backend: Django (Python)
 Frontend: HTML + CSS (server-rendered templates)
 
+### Wizard Flow
+The setup wizard follows this strict order:
+1. **Product Background** (`/upload/step1/`) — product description, value prop, audience
+2. **Screenshots** (`/upload/step2/<flow_id>/`) — upload & drag-to-reorder flow screenshots
+3. **Persona** (`/upload/step3/<flow_id>/`) — select preset or custom persona
+4. **Goals** (`/upload/step4/<flow_id>/`) — define what the persona should achieve
+5. **Confirmation** (`/upload/confirm/<flow_id>/`) — review all inputs with Edit buttons before AI submission
+
+The confirmation screen shows a structured preview of all user inputs (background, screenshots, persona, goals) with per-section Edit buttons. Clicking Edit navigates to the relevant step with `?next=confirm` so the user returns to confirmation after editing instead of continuing the normal wizard flow.
+
+AI analysis is triggered only from the confirmation screen via "Send to AI for Review".
+
 When suggesting improvements:
 - Assume server-rendered flows.
 - Avoid SPA-specific assumptions unless specified.
@@ -70,6 +82,7 @@ Includes:
 - Flow definitions
 - Screenshots
 - Flow goals
+- User-defined goals: what the persona should achieve within the flow (e.g. complete a purchase, sign up for a trial)
 
 Defines test environment.
 
@@ -94,8 +107,8 @@ Return → "Insufficient information to evaluate [X]."
 For each persona:
 
 1. Load persona traits
-2. Load product + flow context
-3. Simulate step-by-step interaction
+2. Load product + flow context + user goals
+3. Simulate step-by-step interaction against stated goals
 4. Identify friction via GLOBAL_KB
 5. Generate structured recommendations
 
@@ -116,6 +129,7 @@ Always evaluate:
 - Is value proposition clear?
 - Is next action obvious?
 - Is onboarding self-explanatory?
+- Can the persona achieve the stated user goals?
 
 If unclear:
 - Identify breakdown point

@@ -1,5 +1,5 @@
 {% extends "uploads/base.html" %}
-{% block title %}Step 3 — Screenshots{% endblock %}
+{% block title %}Step 2 — Screenshots{% endblock %}
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 {% endblock %}
@@ -11,7 +11,10 @@
     <input type="file" name="screenshots" id="file-input" multiple accept="image/*">
     <input type="hidden" name="order" id="order-input">
     <div id="preview-list" class="screenshot-list"></div>
-    <button type="submit" class="btn" style="margin-top: 1rem;">Submit Flow</button>
+    <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+        <a href="{% url 'uploads:step1' %}{% if flow %}?flow_id={{ flow.id }}{% endif %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
+        <button type="submit" class="btn">Next: Select Persona</button>
+    </div>
 </form>
 {% endblock %}
 {% block extra_js %}
