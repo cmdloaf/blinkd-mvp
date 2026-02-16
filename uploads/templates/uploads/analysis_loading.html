@@ -1,0 +1,70 @@
+{% extends "uploads/base.html" %}
+{% block title %}Analyzing Flow…{% endblock %}
+{% block extra_head %}<meta http-equiv="refresh" content="10">{% endblock %}
+{% block content %}
+<div class="loading-container">
+    <div class="spinner"></div>
+    <h2>Analyzing Flow…</h2>
+    <p class="loading-subtext">Simulating persona behavior and detecting friction patterns.</p>
+    <p class="loading-persona">Persona: <strong>{{ persona_name }}</strong></p>
+    <p class="loading-message" id="loading-message">Loading persona constraints…</p>
+    <div id="loading-error" style="display: none;">
+        <p style="color: #dc3545; font-weight: 600;">Analysis failed. Please try again.</p>
+        <form method="post" action="{% url 'uploads:start_analysis' flow_id=flow.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="margin-top: 0.5rem;">Retry Analysis</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var messages = [
+        "Loading persona constraints\u2026",
+        "Evaluating cognitive friction\u2026",
+        "Simulating step-by-step behavior\u2026",
+        "Detecting UX pattern violations\u2026",
+        "Generating structured recommendations\u2026",
+        "Assessing drop-off risk\u2026",
+        "Mapping emotional triggers\u2026"
+    ];
+    var idx = 0;
+    var msgEl = document.getElementById("loading-message");
+
+    setInterval(function() {
+        idx = (idx + 1) % messages.length;
+        msgEl.style.opacity = "0";
+        setTimeout(function() {
+            msgEl.textContent = messages[idx];
+            msgEl.style.opacity = "1";
+        }, 300);
+    }, 4000);
+
+    var statusUrl = "{% url 'uploads:analysis_status' flow_id=flow.id %}";
+    var resultsUrl = "{% url 'uploads:analysis' flow_id=flow.id %}";
+    var errorEl = document.getElementById("loading-error");
+
+    function checkStatus() {
+        fetch(statusUrl)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === "complete") {
+                    window.location.href = resultsUrl;
+                } else if (data.status === "failed") {
+                    msgEl.style.display = "none";
+                    document.querySelector(".spinner").style.display = "none";
+                    errorEl.style.display = "block";
+                } else {
+                    setTimeout(checkStatus, 5000);
+                }
+            })
+            .catch(function() {
+                setTimeout(checkStatus, 5000);
+            });
+    }
+    setTimeout(checkStatus, 3000);
+})();
+</script>
+{% endblock %}

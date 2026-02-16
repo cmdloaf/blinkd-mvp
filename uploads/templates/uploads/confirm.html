@@ -65,12 +65,12 @@
     <a href="{% url 'uploads:step4' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
     {% if has_analysis %}
     <a href="{% url 'uploads:analysis' flow_id=flow.id %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center;">View Analysis</a>
-    <form method="post" action="{% url 'uploads:analysis' flow_id=flow.id %}" style="display: inline;">
+    <form method="post" action="{% url 'uploads:start_analysis' flow_id=flow.id %}" style="display: inline;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Processing\u2026';">
         {% csrf_token %}
         <button type="submit" class="btn-outline">Re-run Analysis</button>
     </form>
     {% else %}
-    <form method="post" action="{% url 'uploads:analysis' flow_id=flow.id %}" style="display: inline;">
+    <form method="post" action="{% url 'uploads:start_analysis' flow_id=flow.id %}" style="display: inline;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Processing\u2026';">
         {% csrf_token %}
         <button type="submit" class="btn">Send to AI for Review</button>
     </form>

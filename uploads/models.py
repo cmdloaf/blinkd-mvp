@@ -6,6 +6,13 @@ from .personas import PERSONA_CHOICES
 
 
 class ProductFlow(models.Model):
+    ANALYSIS_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("processing", "Processing"),
+        ("complete", "Complete"),
+        ("failed", "Failed"),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_background = models.TextField(
         help_text="Product description, value prop, target audience, use cases"
@@ -15,6 +22,11 @@ class ProductFlow(models.Model):
     goals = models.TextField(
         blank=True, default="",
         help_text="What the persona should be able to achieve with this flow",
+    )
+    analysis_status = models.CharField(
+        max_length=20,
+        choices=ANALYSIS_STATUS_CHOICES,
+        default="pending",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

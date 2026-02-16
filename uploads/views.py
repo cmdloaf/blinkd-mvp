@@ -1,5 +1,9 @@
+import threading
+
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import GoalsForm, PersonaSelectionForm, ProductBackgroundForm
 from .llm import run_analysis
@@ -128,26 +132,92 @@ def confirm(request, flow_id):
     })
 
 
-def analysis_view(request, flow_id):
-    flow = get_object_or_404(ProductFlow, id=flow_id)
-
-    if request.method == "POST":
-        print(f"[DEBUG] Running analysis for flow {flow_id}")
-        key_setting = getattr(settings, "GEMINI_API_KEY", "") if settings.LLM_PROVIDER == "gemini" else getattr(settings, "ANTHROPIC_API_KEY", "")
-        print(f"[DEBUG] API key loaded: {'yes' if key_setting else 'NO - EMPTY'} (provider={settings.LLM_PROVIDER})")
-        print(f"[DEBUG] Persona type: {flow.persona_type}")
-        print(f"[DEBUG] Screenshots: {flow.screenshots.count()}")
-        try:
-            response_text = run_analysis(flow)
-            print(f"[DEBUG] Success! Response length: {len(response_text)}")
-        except Exception as e:
-            print(f"[DEBUG] ERROR: {type(e).__name__}: {e}")
-            response_text = f"Error calling API: {e}"
+def _run_analysis_in_background(flow_id):
+    """Run AI analysis in a background thread and update status on completion."""
+    from django.db import connection
+    try:
+        flow = ProductFlow.objects.get(id=flow_id)
+        response_text = run_analysis(flow)
         AnalysisResult.objects.update_or_create(
             product_flow=flow,
             defaults={"raw_response": response_text},
         )
+        flow.analysis_status = "complete"
+        flow.save(update_fields=["analysis_status"])
+    except Exception as e:
+        print(f"[DEBUG] Background analysis ERROR: {type(e).__name__}: {e}")
+        try:
+            flow = ProductFlow.objects.get(id=flow_id)
+            flow.analysis_status = "failed"
+            flow.save(update_fields=["analysis_status"])
+        except Exception:
+            pass
+    finally:
+        connection.close()
+
+
+@require_POST
+def start_analysis(request, flow_id):
+    """Start AI analysis in background and redirect to loading page."""
+    flow = get_object_or_404(ProductFlow, id=flow_id)
+
+    if flow.analysis_status == "processing":
+        return redirect("uploads:analysis_loading", flow_id=flow.id)
+
+    flow.analysis_status = "processing"
+    flow.save(update_fields=["analysis_status"])
+
+    thread = threading.Thread(
+        target=_run_analysis_in_background,
+        args=(flow.id,),
+        daemon=True,
+    )
+    thread.start()
+
+    return redirect("uploads:analysis_loading", flow_id=flow.id)
+
+
+@require_GET
+def analysis_loading(request, flow_id):
+    """Show loading screen while analysis is processing."""
+    flow = get_object_or_404(ProductFlow, id=flow_id)
+
+    if flow.analysis_status == "complete":
         return redirect("uploads:analysis", flow_id=flow.id)
+
+    persona_name = PERSONAS.get(flow.persona_type, {}).get("name", "Custom Persona")
+    return render(request, "uploads/analysis_loading.html", {
+        "flow": flow,
+        "persona_name": persona_name,
+    })
+
+
+@require_GET
+def analysis_status_api(request, flow_id):
+    """JSON endpoint for polling analysis status."""
+    flow = get_object_or_404(ProductFlow, id=flow_id)
+    return JsonResponse({"status": flow.analysis_status})
+
+
+def analysis_view(request, flow_id):
+    flow = get_object_or_404(ProductFlow, id=flow_id)
+
+    # Re-run analysis (from results page re-run button)
+    if request.method == "POST":
+        if flow.analysis_status == "processing":
+            return redirect("uploads:analysis_loading", flow_id=flow.id)
+
+        flow.analysis_status = "processing"
+        flow.save(update_fields=["analysis_status"])
+
+        thread = threading.Thread(
+            target=_run_analysis_in_background,
+            args=(flow.id,),
+            daemon=True,
+        )
+        thread.start()
+
+        return redirect("uploads:analysis_loading", flow_id=flow.id)
 
     analysis = getattr(flow, "analysis", None)
     persona_name = PERSONAS.get(flow.persona_type, {}).get("name", "Custom Persona")

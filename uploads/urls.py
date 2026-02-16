@@ -10,5 +10,8 @@ urlpatterns = [
     path("step3/<uuid:flow_id>/", views.step3_persona, name="step3"),
     path("step4/<uuid:flow_id>/", views.step4_goals, name="step4"),
     path("confirm/<uuid:flow_id>/", views.confirm, name="confirm"),
+    path("analysis/start/<uuid:flow_id>/", views.start_analysis, name="start_analysis"),
+    path("analysis/loading/<uuid:flow_id>/", views.analysis_loading, name="analysis_loading"),
+    path("analysis/status/<uuid:flow_id>/", views.analysis_status_api, name="analysis_status"),
     path("analysis/<uuid:flow_id>/", views.analysis_view, name="analysis"),
 ]
