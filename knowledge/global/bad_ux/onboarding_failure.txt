@@ -1,0 +1,17 @@
+ID: onboarding_failure
+Category: Onboarding
+Description:
+New users are dropped into the product without adequate guidance on what it does, how to start, or what value they will get. The onboarding flow either does not exist, is too long and complex, or fails to connect product features to user goals. Users are expected to figure things out on their own.
+
+Symptoms:
+- New users stare at the screen unsure what to do first
+- Users click randomly trying to understand the interface
+- Users leave within the first session without completing key actions
+- Users misunderstand the product's purpose
+- High churn within first 24 hours
+
+Impact:
+Failed activation and early abandonment. Users never reach the product's value proposition and form a negative first impression that prevents return visits.
+
+Opposite (Good UX Principle):
+guided_onboarding

@@ -1,0 +1,13 @@
+ID: progressive_disclosure
+Category: Cognitive Load
+Description:
+Information and options are revealed gradually, showing only what is relevant to the current step or decision. Complex workflows are broken into manageable chunks. Advanced options are available but not shown by default. Users are guided through complexity one piece at a time.
+
+Prevents:
+- Cognitive overload
+- Decision paralysis from too many simultaneous choices
+- Form abandonment due to perceived complexity
+- Information overwhelm during onboarding
+
+Outcome:
+Users feel confident at each step because they only need to process what is immediately relevant. Task completion rates increase as perceived complexity decreases.

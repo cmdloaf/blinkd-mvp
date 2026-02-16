@@ -1,0 +1,13 @@
+ID: guided_onboarding
+Category: Onboarding
+Description:
+New users are introduced to the product through a structured, goal-oriented sequence that connects features to user value. The onboarding flow shows what the product does, helps users complete a meaningful first action, and builds confidence through early wins. Guidance is contextual and disappears once the user demonstrates competence.
+
+Prevents:
+- Onboarding failure
+- First-session abandonment
+- Feature misunderstanding
+- Blank-slate paralysis
+
+Outcome:
+Users reach the product's value proposition quickly and form a positive first impression. Activation rates improve because users understand how the product serves their goals.

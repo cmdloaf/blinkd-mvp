@@ -1,0 +1,16 @@
+ID: cta_misplacement
+Category: Conversion Clarity
+Description:
+Primary call-to-action is positioned far from the context that motivates it. The action button is spatially disconnected from the information that builds user intent. Examples include checkout buttons placed far from basket summaries, sign-up CTAs below the fold, or action buttons separated from their explanatory content by unrelated elements.
+
+Symptoms:
+- Users complete mental commitment but cannot find the action button
+- Users scroll or search for the next step
+- Decision momentum is lost between intent and action
+- Users click wrong elements looking for the CTA
+
+Impact:
+Drop-off at conversion-critical moments. Users who were ready to act lose confidence or get distracted before finding the button.
+
+Opposite (Good UX Principle):
+strong_cta_alignment

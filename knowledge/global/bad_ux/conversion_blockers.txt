@@ -1,0 +1,17 @@
+ID: conversion_blockers
+Category: Conversion
+Description:
+Unnecessary barriers placed between user intent and conversion action. Includes mandatory registration before browsing, excessive form fields for simple actions, unclear pricing, hidden costs revealed late in the flow, or requiring information not relevant to the current task.
+
+Symptoms:
+- Users drop off at registration or sign-up walls
+- Users abandon forms with too many required fields
+- Users express frustration at hidden costs or surprise requirements
+- Users seek alternative products with lower friction
+- Cart abandonment at final steps
+
+Impact:
+Direct revenue and conversion loss. Users who were motivated to complete the action are blocked by unnecessary process requirements.
+
+Opposite (Good UX Principle):
+conversion_clarity

@@ -1,0 +1,13 @@
+ID: strong_cta_alignment
+Category: Conversion Clarity
+Description:
+Primary call-to-action is placed immediately adjacent to the content that builds motivation and intent. The user's eye naturally flows from understanding to action without searching. CTAs are visually prominent and positioned where decision momentum peaks.
+
+Prevents:
+- CTA misplacement
+- Decision hesitation
+- Conversion drop-off due to spatial disconnect
+- Users searching for next steps
+
+Outcome:
+Higher conversion clarity. Users act on decisions immediately while motivation is fresh. Reduced friction between intent and action.

@@ -1,0 +1,13 @@
+ID: visible_affordances
+Category: Interaction Design
+Description:
+Interactive elements clearly communicate their clickability, tappability, or other actionable nature through visual design. Buttons look like buttons, links are visually distinct from text, draggable items have drag handles, and expandable sections have clear indicators. Users can identify interactive elements at a glance.
+
+Prevents:
+- Missing affordances
+- Feature discovery failure
+- Users missing key functionality
+- Random clicking to discover interactions
+
+Outcome:
+Users engage with the full feature set because interactive elements are self-evident. Feature utilization increases and users complete tasks through the most efficient paths.

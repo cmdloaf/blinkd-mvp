@@ -1,0 +1,13 @@
+ID: conversion_clarity
+Category: Conversion
+Description:
+The path from interest to conversion is transparent, minimal, and free of unnecessary barriers. Pricing is visible upfront, required information is limited to what is truly necessary, and the user understands exactly what will happen when they commit. No surprises, no hidden steps.
+
+Prevents:
+- Conversion blockers
+- Cart abandonment from hidden costs
+- Registration walls that deter exploration
+- Trust erosion from surprise requirements
+
+Outcome:
+Users convert at higher rates because the process matches their expectations. Trust is maintained throughout the funnel because there are no unpleasant surprises.

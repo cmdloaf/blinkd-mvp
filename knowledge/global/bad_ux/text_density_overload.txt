@@ -1,0 +1,17 @@
+ID: text_density_overload
+Category: Cognitive Load
+Description:
+Large blocks of unbroken text presented during task-critical moments. Users face walls of content without visual hierarchy, spacing, or chunking to aid scanning. Paragraphs run together without clear separation of key points from supporting detail.
+
+Symptoms:
+- Users hesitate before reading
+- Users skip instructions entirely
+- Users miss critical information buried in paragraphs
+- Increased time-on-page without corresponding comprehension
+- Users re-read sections multiple times
+
+Impact:
+Confusion, abandonment, and failure to complete intended actions. Users who do read everything experience cognitive fatigue and reduced confidence in their decisions.
+
+Opposite (Good UX Principle):
+scannable_content

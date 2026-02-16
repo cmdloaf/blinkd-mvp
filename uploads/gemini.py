@@ -7,6 +7,7 @@ from .personas import (
     BASE_SIMULATION_PROMPT,
     CUSTOM_STRUCTURING_PROMPT,
     OUTPUT_FORMAT_INSTRUCTIONS,
+    format_global_kb_for_prompt,
     get_system_prompt,
 )
 
@@ -53,8 +54,10 @@ def run_analysis(product_flow):
     # Build the system prompt based on persona type
     if product_flow.persona_type == "custom":
         structured = structure_custom_persona(product_flow.custom_persona_description)
+        global_kb_block = format_global_kb_for_prompt()
         system_prompt = BASE_SIMULATION_PROMPT.format(
             structured_persona=structured,
+            global_kb=global_kb_block,
             output_format=OUTPUT_FORMAT_INSTRUCTIONS,
         )
     else:

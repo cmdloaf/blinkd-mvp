@@ -1,0 +1,17 @@
+ID: unclear_hierarchy
+Category: Visual Design
+Description:
+Visual layout fails to establish clear priority between elements. Primary actions, secondary actions, and informational content all receive equal visual weight. Headlines, body text, and metadata are not visually differentiated. Users cannot quickly determine what is most important on the page.
+
+Symptoms:
+- Users scan the page without finding the primary action
+- Users read low-priority content before high-priority content
+- Users feel the page is cluttered even when content is reasonable
+- Users struggle to differentiate primary from secondary actions
+- Eye tracking shows scattered attention patterns
+
+Impact:
+Users waste time processing low-value content and may miss critical information or actions entirely. The interface feels chaotic and unprofessional, reducing trust.
+
+Opposite (Good UX Principle):
+clear_visual_hierarchy

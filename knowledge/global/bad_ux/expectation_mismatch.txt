@@ -1,0 +1,17 @@
+ID: expectation_mismatch
+Category: Usability
+Description:
+What users expect to happen based on visual cues, labels, or prior experience does not match what actually happens. Buttons labeled misleadingly, links that navigate unexpectedly, form submissions that produce surprising results, or progress indicators that do not reflect actual progress.
+
+Symptoms:
+- Users express surprise or confusion after taking an action
+- Users use the back button frequently
+- Users re-read labels and instructions after unexpected results
+- Users hesitate before committing to actions
+- Users develop distrust of the interface
+
+Impact:
+Erosion of user confidence and trust. Users become cautious and slow, second-guessing every action. In severe cases, users abandon the product entirely due to unpredictability.
+
+Opposite (Good UX Principle):
+expectation_alignment

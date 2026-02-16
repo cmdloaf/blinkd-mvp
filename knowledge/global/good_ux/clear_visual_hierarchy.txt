@@ -1,0 +1,13 @@
+ID: clear_visual_hierarchy
+Category: Visual Design
+Description:
+Visual layout establishes clear priority between elements through size, color, contrast, spacing, and positioning. Primary actions are visually dominant, secondary actions are subdued, and informational content is appropriately weighted. Users can instantly identify what matters most on the page.
+
+Prevents:
+- Unclear hierarchy
+- Users missing primary actions
+- Cluttered interface perception
+- Scattered attention patterns
+
+Outcome:
+Users process pages efficiently, focusing on high-priority content first. The interface feels clean and professional regardless of content density. Primary actions receive appropriate attention.

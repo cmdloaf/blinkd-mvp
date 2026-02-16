@@ -1,0 +1,17 @@
+ID: mental_model_mismatch
+Category: Usability
+Description:
+The product's conceptual structure, terminology, or navigation does not match how users think about the task. Labels use internal jargon instead of user language. Information is organized by system architecture rather than user goals. Actions produce unexpected results because the interface implies different behavior.
+
+Symptoms:
+- Users look for features in the wrong places
+- Users misinterpret labels or button text
+- Users are surprised by what happens after clicking
+- Users use workarounds instead of intended pathways
+- Users ask "where is..." or "how do I..." frequently
+
+Impact:
+Persistent confusion and reduced efficiency. Users lose trust in the interface and develop anxiety about taking actions. Learning curve becomes unnecessarily steep.
+
+Opposite (Good UX Principle):
+consistent_mental_model
