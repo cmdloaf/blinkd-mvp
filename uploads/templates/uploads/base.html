@@ -154,9 +154,14 @@
         .compact-card.sev-med { border-left-color: #f0ad4e; background: #fffbf5; }
         .compact-card.sev-low { border-left-color: #5cb85c; background: #f5fff5; }
         .compact-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; gap: 0.5rem; }
-        .compact-card-title { font-weight: 600; font-size: 0.95rem; line-height: 1.4; color: #222; flex: 1; }
+        .compact-card-title { font-weight: 700; font-size: 1rem; line-height: 1.4; color: #111; flex: 1; }
+        .compact-card-summary { font-size: 0.88rem; line-height: 1.5; color: #666; margin-bottom: 0.4rem; }
         .compact-card-body { font-size: 0.9rem; line-height: 1.5; color: #555; }
         .compact-card-meta { margin-top: 0.5rem; }
+        .goal-impact-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.03em; margin-top: 0.4rem; }
+        .goal-impact-blocker { background: #f8d7da; color: #721c24; }
+        .goal-impact-improves { background: #d4edda; color: #155724; }
+        .goal-impact-clarifies { background: #d1ecf1; color: #0c5460; }
         .pattern-id-badge { display: inline-block; background: #e9ecef; color: #495057; padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.75rem; font-family: monospace; }
 
         .expandable-details { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #f0f0f0; display: none; }
@@ -174,6 +179,25 @@
         .collapsible-section.collapsed .collapsible-body { display: none; }
 
         .empty-state { text-align: center; padding: 2rem; color: #999; font-style: italic; }
+
+        /* Goal Achievability */
+        .goal-achievability-tile { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 2rem; }
+        .goal-tile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .goal-tile-header h3 { margin: 0; border: none; padding: 0; font-size: 1.15rem; }
+        .goal-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .goal-yes { background: #d4edda; color: #155724; }
+        .goal-partial { background: #fff3cd; color: #856404; }
+        .goal-no { background: #f8d7da; color: #721c24; }
+        .goal-tile-body { line-height: 1.6; }
+        .goal-field { margin-bottom: 0.75rem; }
+        .goal-field p { margin: 0.2rem 0 0 0; }
+        .goal-meta { margin: 0.75rem 0; }
+        .goal-risk { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+        .risk-high { background: #f8d7da; color: #721c24; }
+        .risk-med { background: #fff3cd; color: #856404; }
+        .risk-low { background: #d4edda; color: #155724; }
+        .stat-card.stat-goal { border-left-color: #6f42c1; }
+        .stat-goal-text { font-size: 1.1rem; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>

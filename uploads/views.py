@@ -231,7 +231,7 @@ def analysis_status_api(request, flow_id):
     return JsonResponse({"status": flow.analysis_status})
 
 
-def _build_dashboard_context(recommendations, friction_items, simulation_steps):
+def _build_dashboard_context(recommendations, friction_items, simulation_steps, goal_achievability=None):
     """Build sorted/counted dashboard context for the template."""
     priority_order = {"high": 0, "med": 1, "low": 2}
 
@@ -246,6 +246,12 @@ def _build_dashboard_context(recommendations, friction_items, simulation_steps):
 
     high_recs = sum(1 for r in sorted_recs if r.get("priority") == "high")
     high_friction = sum(1 for f in sorted_friction if f.get("severity") == "high")
+    # Goal blockers not already counted as high priority
+    goal_blockers = sum(
+        1 for r in sorted_recs
+        if "blocker" in r.get("goal_impact", "").lower()
+        and r.get("priority") != "high"
+    )
 
     problematic_steps = [
         s for s in (simulation_steps or [])
@@ -253,13 +259,15 @@ def _build_dashboard_context(recommendations, friction_items, simulation_steps):
     ]
 
     return {
-        "critical_count": high_recs + high_friction,
+        "critical_count": high_recs + high_friction + goal_blockers,
         "total_recommendations": len(sorted_recs),
         "total_friction": len(sorted_friction),
         "sorted_recommendations": sorted_recs,
         "sorted_friction": sorted_friction,
         "problematic_steps_count": len(problematic_steps),
         "total_steps": len(simulation_steps) if simulation_steps else 0,
+        "goal_achievable": goal_achievability.get("achievable", "N/A") if goal_achievability else "N/A",
+        "goal_achievable_class": goal_achievability.get("achievable_class", "") if goal_achievability else "",
     }
 
 
@@ -288,6 +296,7 @@ def analysis_view(request, flow_id):
 
     sections = None
     executive_summary = None
+    goal_achievability = None
     recommendations = None
     friction_items = None
     simulation_steps = None
@@ -298,16 +307,18 @@ def analysis_view(request, flow_id):
             parse_analysis_sections,
             parse_executive_summary,
             parse_friction_items,
+            parse_goal_achievability,
             parse_recommendations,
             parse_simulation_steps,
         )
         sections = parse_analysis_sections(analysis.raw_response)
         if sections:
             executive_summary = parse_executive_summary(sections.get("product_understanding", ""))
+            goal_achievability = parse_goal_achievability(sections.get("goal_achievability", ""))
             recommendations = parse_recommendations(sections.get("recommendations", ""))
             friction_items = parse_friction_items(sections.get("friction_summary", ""))
             simulation_steps = parse_simulation_steps(sections.get("persona_simulation", ""))
-            dashboard = _build_dashboard_context(recommendations, friction_items, simulation_steps)
+            dashboard = _build_dashboard_context(recommendations, friction_items, simulation_steps, goal_achievability)
 
     return render(request, "uploads/analysis.html", {
         "flow": flow,
@@ -315,6 +326,7 @@ def analysis_view(request, flow_id):
         "persona_name": persona_name,
         "sections": sections,
         "executive_summary": executive_summary,
+        "goal_achievability": goal_achievability,
         "recommendations": recommendations,
         "friction_items": friction_items,
         "simulation_steps": simulation_steps,

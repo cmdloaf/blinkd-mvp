@@ -179,8 +179,9 @@ For each persona:
 3. Load product + flow context + user goals from ProductFlow
 4. Inject all three KBs into the system prompt
 5. Simulate step-by-step interaction against stated goals
-6. Identify friction and map to Pattern IDs from GLOBAL_KB
-7. Generate recommendations derived from matched pattern's Actionable Correction
+6. Evaluate goal achievability — can the persona achieve the PRIMARY USER GOAL through this flow?
+7. Identify friction and map to Pattern IDs from GLOBAL_KB
+8. Generate recommendations derived from matched pattern's Actionable Correction
 
 Simulation must:
 - Reflect persona psychology
@@ -189,6 +190,7 @@ Simulation must:
 - Identify confusion
 - Assess drop-off risk
 - Assess error likelihood
+- Explicitly evaluate whether the persona can achieve the PRIMARY USER GOAL
 
 
 --------------------------------------------------
@@ -199,7 +201,7 @@ Always evaluate:
 - Is value proposition clear?
 - Is next action obvious?
 - Is onboarding self-explanatory?
-- Can the persona achieve the stated user goals?
+- Can the persona complete the PRIMARY USER GOAL within this flow?
 
 If unclear:
 - Identify breakdown point
@@ -227,6 +229,10 @@ Each friction must include:
 - Persona reasoning
 - Severity (Low/Medium/High)
 
+Severity reweighting:
+- Friction that directly blocks goal completion → auto High severity
+- Cosmetic friction not affecting goal → deprioritized to Low unless compounding
+
 
 --------------------------------------------------
 ## 7. OUTPUT FORMAT (MANDATORY)
@@ -235,7 +241,17 @@ Each friction must include:
 - Clarity status
 - Early confusion signals
 
-### SECTION 2 — PERSONA SIMULATION
+### SECTION 2 — GOAL ACHIEVABILITY
+- Stated User Goal
+- Achievable? (Yes / Partial / No)
+- Breakdown Step (step # or "N/A")
+- Drop-off Risk (Low / Medium / High)
+- Root Cause of Goal Failure (reference Pattern ID if applicable, or "N/A")
+- Direct Blockers (list, or "None identified")
+
+If no goal provided → "Insufficient information to evaluate goal achievability."
+
+### SECTION 3 — PERSONA SIMULATION
 Per step:
 - Step #
 - Inner monologue
@@ -245,7 +261,7 @@ Per step:
 - Emotional state
 - Verdict: Continue / Hesitate / Drop
 
-### SECTION 3 — FRICTION SUMMARY
+### SECTION 4 — FRICTION SUMMARY
 Top issues (each MUST reference a Pattern ID from GLOBAL_KB):
 - Description
 - Pattern ID
@@ -253,7 +269,9 @@ Top issues (each MUST reference a Pattern ID from GLOBAL_KB):
 - Root cause (referencing KB pattern description)
 - Affected persona reasoning
 
-### SECTION 4 — RECOMMENDATIONS
+Goal-blocking friction → auto High severity. Cosmetic friction → Low unless compounding.
+
+### SECTION 5 — RECOMMENDATIONS
 For each (MUST reference a Pattern ID and derive fix from its Actionable Correction):
 1. Observed Problem
 2. Pattern ID
@@ -262,6 +280,9 @@ For each (MUST reference a Pattern ID and derive fix from its Actionable Correct
 5. Actionable Fix (realistic within Django + HTML/CSS, derived from the pattern's Actionable Correction)
 6. Expected Impact
 7. Priority (Low/Med/High)
+8. Goal Impact ("Removes goal blocker" / "Improves goal completion" / "Clarifies goal pathway" / "No direct goal impact")
+
+Recommendations removing goal blockers MUST be ranked higher than cosmetic improvements.
 
 
 --------------------------------------------------
@@ -296,13 +317,14 @@ If data incomplete → explicitly flag it.
 
 Valid output must:
 - Be persona-consistent
+- Be goal-evaluative (every analysis explicitly judges whether the persona can achieve the stated goal)
 - Be friction-traceable (every friction maps to a GLOBAL_KB Pattern ID)
 - Contain actionable recommendations (each derived from the matched pattern's Actionable Correction)
 - Avoid hallucinations (no UX advice outside uploaded doctrine)
 - Follow structure exactly
 
 Primary objective:
-Structured UX diagnosis + implementable improvements, fully grounded in uploaded UX doctrine.
+Goal-oriented UX feasibility evaluation + structured diagnosis + implementable improvements, fully grounded in uploaded UX doctrine.
 
 
 --------------------------------------------------
@@ -332,5 +354,58 @@ blinkd_mvp/
 
 ### Key Files
 - `services/kb_loader.py` — Central loader for both PERSONA_KB and GLOBAL_KB. Functions: `load_all_personas()`, `load_global_ux_patterns()`, `format_global_kb_for_prompt()`, `build_system_prompt()`
-- `uploads/personas.py` — Prompt templates (`OUTPUT_FORMAT_INSTRUCTIONS`, `BASE_SIMULATION_PROMPT`, `CUSTOM_STRUCTURING_PROMPT`) and `get_system_prompt()` which injects Global KB into persona prompts
+- `uploads/personas.py` — Prompt templates (`OUTPUT_FORMAT_INSTRUCTIONS`, `BASE_SIMULATION_PROMPT`, `CUSTOM_STRUCTURING_PROMPT`, `GOAL_ACHIEVABILITY_CHECK`) and `get_system_prompt()` which injects Global KB into persona prompts
+- `uploads/parsing.py` — Parses raw LLM output into structured data for the dashboard. Key functions: `parse_analysis_sections()`, `parse_goal_achievability()`, `parse_recommendations()`, `parse_friction_items()`, `parse_simulation_steps()`, `parse_executive_summary()`
 - `uploads/llm.py` — Provider routing: tries Gemini first, falls back to Anthropic. No config needed beyond setting API keys in `.env`
+
+
+--------------------------------------------------
+## 12. ANALYSIS RESULTS PARSING
+
+### Section Splitting
+`parse_analysis_sections()` splits raw LLM output on `## SECTION <N> — <TITLE>` headers.
+- **5-section format** (current): product_understanding, goal_achievability, persona_simulation, friction_summary, recommendations
+- **4-section format** (legacy): product_understanding, persona_simulation, friction_summary, recommendations (no goal_achievability)
+- Legacy results still render correctly — the goal achievability tile simply doesn't appear.
+
+### Field Extraction
+`_extract_field(block, field_name)` extracts values after `**Field Name**:` markers. Handles multiple AI output formats:
+- `**Field**: value` (inline)
+- `1. **Field**: value` (numbered)
+- `*   **Field**: value` (bullet-indented, common from Gemini)
+- `- **Field**: value` (dash bullet)
+
+**Critical**: Do NOT call `clean_llm_output()` on text before passing to `_extract_field()` — it strips `**` markers that the regex needs.
+
+### Goal Achievability Parsing
+`parse_goal_achievability()` extracts: `stated_goal`, `achievable` (Yes/Partial/No), `breakdown_step`, `dropoff_risk` (High/Medium/Low), `root_cause`, `direct_blockers`. Returns `None` if the field is empty or unparseable (never defaults to "Unknown").
+
+### Recommendation Card Structure
+Each parsed recommendation contains:
+- `title` — First sentence of `actionable_fix` (action-oriented, for card header)
+- `summary` — First sentence of `observed_problem` (brief context, for card body)
+- `pattern_id` — Cleaned (brackets/backticks stripped)
+- `goal_impact` — "Removes goal blocker" / "Improves goal completion" / "Clarifies goal pathway" / "No direct goal impact"
+- Full fields (`observed_problem`, `why_it_happens`, `violated_pattern`, `actionable_fix`, `expected_impact`) shown only in expandable details
+
+### Dashboard Metrics
+`_build_dashboard_context()` computes:
+- `critical_count` = high-priority recs + high-severity friction + goal blockers (non-high-priority recs with "blocker" in goal_impact)
+- `problematic_steps_count` = steps with verdict "Drop" or "Hesitate"
+- `goal_achievable` = achievable status from goal achievability parsing
+
+### UI Card Design Rules
+- **Recommendation cards**: Title (bold) + summary (muted) + goal impact badge (inline, colored) + "View details" toggle. Pattern IDs only in expandable details.
+- **Friction cards**: Description (bold) + root cause summary (muted) + "View details" toggle. Pattern IDs only in expandable details.
+- No raw pattern IDs in main card view. No duplicated content blocks.
+
+
+--------------------------------------------------
+## 13. DEVELOPMENT RULES
+
+When modifying any system in this project:
+1. **Update this file** — Any change to prompts, output format, parsing logic, dashboard metrics, or UI structure must be reflected in the relevant section of this CLAUDE.md.
+2. **Backward compatibility** — Parsing changes must handle both current and legacy AI output formats. Never break rendering of existing `AnalysisResult` records.
+3. **Parsing safety** — Never call `clean_llm_output()` before `_extract_field()`. Extract fields from raw markdown first, clean values after.
+4. **No SPA patterns** — All UI changes must work within Django server-rendered templates + vanilla CSS/JS. No React, Vue, or frontend frameworks.
+5. **Goal-first evaluation** — Goal achievability is the primary diagnostic signal. Friction severity and recommendation priority must reflect goal impact.

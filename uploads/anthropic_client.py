@@ -7,6 +7,7 @@ from anthropic import Anthropic
 from .personas import (
     BASE_SIMULATION_PROMPT,
     CUSTOM_STRUCTURING_PROMPT,
+    GOAL_ACHIEVABILITY_CHECK,
     OUTPUT_FORMAT_INSTRUCTIONS,
     format_global_kb_for_prompt,
     get_system_prompt,
@@ -63,6 +64,7 @@ def run_analysis(product_flow):
         system_prompt = BASE_SIMULATION_PROMPT.format(
             structured_persona=structured,
             global_kb=global_kb_block,
+            goal_check=GOAL_ACHIEVABILITY_CHECK,
             output_format=OUTPUT_FORMAT_INSTRUCTIONS,
         )
     else:
@@ -76,7 +78,12 @@ def run_analysis(product_flow):
             "type": "text",
             "text": (
                 f"PRODUCT BACKGROUND:\n{product_flow.product_background}\n\n"
-                + (f"USER GOALS:\n{product_flow.goals}\n\n" if product_flow.goals else "")
+                + (
+                    f"PRIMARY USER GOAL:\n{product_flow.goals}\n\n"
+                    "This is the central objective the persona must achieve. "
+                    "Evaluate all friction and recommendations against this goal.\n\n"
+                    if product_flow.goals else ""
+                )
                 + f"The following {len(screenshots)} screenshot(s) show the product flow in order. "
                 "Evaluate each step as this persona would experience it:\n"
             ),

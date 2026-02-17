@@ -15,13 +15,24 @@ from services.kb_loader import (
 )
 
 OUTPUT_FORMAT_INSTRUCTIONS = """
-You MUST structure your response in exactly these 4 sections:
+You MUST structure your response in exactly these 5 sections:
 
 ## SECTION 1 — PRODUCT UNDERSTANDING
 - Clarity status: Is it immediately clear what this product does?
 - Early confusion signals: What might confuse this persona on first encounter?
 
-## SECTION 2 — PERSONA SIMULATION
+## SECTION 2 — GOAL ACHIEVABILITY
+Evaluate whether the persona can achieve the PRIMARY USER GOAL through this product flow:
+- **Stated User Goal**: Restate the primary user goal
+- **Achievable?**: Yes / Partial / No
+- **Breakdown Step**: The step number where goal achievement breaks down (or "N/A" if fully achievable)
+- **Drop-off Risk**: Low / Medium / High — likelihood the persona abandons before achieving the goal
+- **Root Cause of Goal Failure**: Why the goal cannot be fully achieved (reference a Pattern ID from the Global KB if applicable, or "N/A")
+- **Direct Blockers**: List specific UI/flow elements that prevent goal completion (or "None identified")
+
+If no user goal was provided, state: "Insufficient information to evaluate goal achievability."
+
+## SECTION 3 — PERSONA SIMULATION
 For each screenshot/step in the flow, provide:
 - **Step #**: (step number)
 - **Inner monologue**: What this persona is thinking (in their voice)
@@ -31,7 +42,7 @@ For each screenshot/step in the flow, provide:
 - **Emotional state**: How they feel at this point
 - **Verdict**: Continue / Hesitate / Drop
 
-## SECTION 3 — FRICTION SUMMARY
+## SECTION 4 — FRICTION SUMMARY
 List the top issues found. Each issue MUST map to a Pattern ID from the Global Knowledge Base:
 - **Description**: What the issue is
 - **Pattern ID**: The ID from the Global KB (e.g., text_density_overload)
@@ -39,7 +50,9 @@ List the top issues found. Each issue MUST map to a Pattern ID from the Global K
 - **Root cause**: Why this is a problem, referencing the KB pattern description
 - **Affected persona reasoning**: Why this persona specifically struggles here
 
-## SECTION 4 — RECOMMENDATIONS
+SEVERITY REWEIGHTING: Friction that directly blocks goal completion MUST be rated **High** severity regardless of other factors. Cosmetic friction that does not affect goal completion should be rated **Low** unless it compounds with other issues.
+
+## SECTION 5 — RECOMMENDATIONS
 For each recommendation, you MUST reference a Pattern ID from the Global Knowledge Base and derive the fix from that pattern's Actionable Correction:
 1. **Observed Problem**: What was found
 2. **Pattern ID**: The KB pattern this maps to
@@ -48,6 +61,9 @@ For each recommendation, you MUST reference a Pattern ID from the Global Knowled
 5. **Actionable Fix**: A realistic fix (within Django + HTML/CSS architecture), derived from the pattern's Actionable Correction
 6. **Expected Impact**: What improves if fixed
 7. **Priority**: Low / Med / High
+8. **Goal Impact**: "Removes goal blocker" / "Improves goal completion" / "Clarifies goal pathway" / "No direct goal impact"
+
+Recommendations that remove goal blockers or improve goal completion MUST be ranked higher than cosmetic improvements.
 """
 
 # Backwards-compatible dict: slug -> persona data (loaded from JSON files)
@@ -83,6 +99,17 @@ User's description:
 
 Return ONLY the structured persona profile, no additional commentary."""
 
+GOAL_ACHIEVABILITY_CHECK = """
+GOAL ACHIEVABILITY CHECK (MANDATORY):
+You MUST evaluate whether the persona can achieve the PRIMARY USER GOAL stated in the user message.
+- Assess goal progression at each step of the flow.
+- Identify the exact step where goal achievement breaks down, if applicable.
+- Friction that directly blocks goal completion MUST be classified as High severity.
+- Recommendations that remove goal blockers MUST be prioritized above cosmetic fixes.
+- If no goal is provided, state: "Insufficient information to evaluate goal achievability."
+- All blockers must reference Pattern IDs from the Global KB where applicable.
+"""
+
 BASE_SIMULATION_PROMPT = """You are a UX simulation engine. You are simulating a user persona with the following profile evaluating a product flow.
 
 PERSONA PROFILE:
@@ -96,6 +123,8 @@ SIMULATION RULES:
 - If the persona would realistically drop off, say so and explain why.
 
 {global_kb}
+
+{goal_check}
 
 Evaluate the product flow shown in the screenshots step by step, staying in character.
 {output_format}"""

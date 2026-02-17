@@ -241,6 +241,17 @@ def build_system_prompt(persona, output_format_instructions, global_kb_block="")
     # Insert Global KB block if provided
     kb_section = f"\n{global_kb_block}\n" if global_kb_block else ""
 
+    goal_check_block = """
+GOAL ACHIEVABILITY CHECK (MANDATORY):
+You MUST evaluate whether the persona can achieve the PRIMARY USER GOAL stated in the user message.
+- Assess goal progression at each step of the flow.
+- Identify the exact step where goal achievement breaks down, if applicable.
+- Friction that directly blocks goal completion MUST be classified as High severity.
+- Recommendations that remove goal blockers MUST be prioritized above cosmetic fixes.
+- If no goal is provided, state: "Insufficient information to evaluate goal achievability."
+- All blockers must reference Pattern IDs from the Global KB where applicable.
+"""
+
     return f"""You are a UX simulation engine. You are simulating a user persona called "{name}" evaluating a product flow.
 
 PERSONA PROFILE:
@@ -257,5 +268,6 @@ PERSONA PROFILE:
 SIMULATION RULES:
 {rules_block}
 {kb_section}
+{goal_check_block}
 Evaluate the product flow shown in the screenshots step by step, staying in character.
 {output_format_instructions}"""

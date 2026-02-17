@@ -39,6 +39,49 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 {% endif %}
 
+{# ── Goal Achievability ── #}
+{% if goal_achievability %}
+<div class="goal-achievability-tile">
+    <div class="goal-tile-header">
+        <h3>Goal Achievability</h3>
+        <span class="goal-badge {{ goal_achievability.achievable_class }}">
+            {{ goal_achievability.achievable }}
+        </span>
+    </div>
+    <div class="goal-tile-body">
+        {% if goal_achievability.stated_goal %}
+        <div class="goal-field">
+            <span class="rec-label">Primary Goal</span>
+            <p>{{ goal_achievability.stated_goal }}</p>
+        </div>
+        {% endif %}
+        {% if goal_achievability.breakdown_step and goal_achievability.breakdown_step != "N/A" %}
+        <div class="goal-field">
+            <span class="rec-label">Breaks Down At</span>
+            <p>Step {{ goal_achievability.breakdown_step }}</p>
+        </div>
+        {% endif %}
+        <div class="goal-meta">
+            <span class="goal-risk {{ goal_achievability.dropoff_risk_class }}">
+                Drop-off Risk: {{ goal_achievability.dropoff_risk }}
+            </span>
+        </div>
+        {% if goal_achievability.root_cause and goal_achievability.root_cause != "N/A" %}
+        <div class="goal-field">
+            <span class="rec-label">Root Cause</span>
+            <p>{{ goal_achievability.root_cause }}</p>
+        </div>
+        {% endif %}
+        {% if goal_achievability.direct_blockers and goal_achievability.direct_blockers != "None identified" %}
+        <div class="goal-field">
+            <span class="rec-label">Direct Blockers</span>
+            <p>{{ goal_achievability.direct_blockers }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 {# ── Stats Bar ── #}
 <div class="dashboard-stats">
     <div class="stat-card stat-critical">
@@ -57,6 +100,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="stat-number">{{ dashboard.problematic_steps_count }}/{{ dashboard.total_steps }}</div>
         <div class="stat-label">Problem Steps</div>
     </div>
+    {% if dashboard.goal_achievable != "N/A" %}
+    <div class="stat-card stat-goal">
+        <div class="stat-number stat-goal-text">{{ dashboard.goal_achievable }}</div>
+        <div class="stat-label">Goal Status</div>
+    </div>
+    {% endif %}
 </div>
 
 {# ── Two-Column Grid ── #}
@@ -77,14 +126,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             {% if item.severity == "high" %}HIGH{% elif item.severity == "med" %}MED{% else %}LOW{% endif %}
                         </span>
                     </div>
-                    <div class="compact-card-body">{{ item.root_cause|truncatewords:25 }}</div>
-                    {% if item.pattern_id %}
-                    <div class="compact-card-meta">
-                        <span class="pattern-id-badge">{{ item.pattern_id }}</span>
-                    </div>
-                    {% endif %}
-                    {% if item.persona_reasoning %}
-                    <button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
+                    <div class="compact-card-summary">{{ item.root_cause|truncatewords:25 }}</div>
+                    {% if item.persona_reasoning or item.pattern_id %}
+                    <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
                     <div class="expandable-details">
                         {% if item.root_cause %}
                         <div class="rec-field">
@@ -92,10 +136,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p>{{ item.root_cause }}</p>
                         </div>
                         {% endif %}
+                        {% if item.pattern_id %}
+                        <div class="rec-field">
+                            <span class="rec-label">UX Doctrine</span>
+                            <p><span class="pattern-id-badge">{{ item.pattern_id }}</span></p>
+                        </div>
+                        {% endif %}
+                        {% if item.persona_reasoning %}
                         <div class="rec-field">
                             <span class="rec-label">Why {{ persona_name }} Struggles</span>
                             <p>{{ item.persona_reasoning }}</p>
                         </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -116,23 +168,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% for rec in dashboard.sorted_recommendations %}
                 <div class="compact-card sev-{{ rec.priority }}">
                     <div class="compact-card-header">
-                        <div class="compact-card-title">{{ rec.observed_problem }}</div>
+                        <div class="compact-card-title">{{ rec.title|default:rec.observed_problem|truncatewords:15 }}</div>
                         <span class="rec-priority priority-{{ rec.priority }}">
                             {% if rec.priority == "high" %}HIGH{% elif rec.priority == "med" %}MED{% else %}LOW{% endif %}
                         </span>
                     </div>
-                    <div class="compact-card-body"><strong>Fix:</strong> {{ rec.actionable_fix|truncatewords:20 }}</div>
-                    {% if rec.pattern_id %}
-                    <div class="compact-card-meta">
-                        <span class="pattern-id-badge">{{ rec.pattern_id }}</span>
-                    </div>
+                    {% if rec.summary %}
+                    <div class="compact-card-summary">{{ rec.summary }}</div>
                     {% endif %}
-                    <button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
+                    {% if rec.goal_impact %}
+                    <span class="goal-impact-badge {% if 'blocker' in rec.goal_impact|lower %}goal-impact-blocker{% elif 'improves' in rec.goal_impact|lower %}goal-impact-improves{% elif 'clarifies' in rec.goal_impact|lower %}goal-impact-clarifies{% endif %}">{{ rec.goal_impact }}</span>
+                    {% endif %}
+                    <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
                     <div class="expandable-details">
                         {% if rec.why_it_happens %}
                         <div class="rec-field">
-                            <span class="rec-label">Why It Happens</span>
+                            <span class="rec-label">Root Cause</span>
                             <p>{{ rec.why_it_happens }}</p>
+                        </div>
+                        {% endif %}
+                        {% if rec.violated_pattern or rec.pattern_id %}
+                        <div class="rec-field">
+                            <span class="rec-label">Violated UX Doctrine</span>
+                            <p>{% if rec.violated_pattern %}{{ rec.violated_pattern }}{% endif %}{% if rec.pattern_id %} <span class="pattern-id-badge">{{ rec.pattern_id }}</span>{% endif %}</p>
                         </div>
                         {% endif %}
                         {% if rec.actionable_fix %}
@@ -143,14 +201,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         {% endif %}
                         {% if rec.expected_impact %}
                         <div class="rec-field">
-                            <span class="rec-label">Expected Impact</span>
+                            <span class="rec-label">Expected Outcome</span>
                             <p>{{ rec.expected_impact }}</p>
                         </div>
                         {% endif %}
-                        {% if rec.violated_pattern %}
+                        {% if rec.goal_impact %}
                         <div class="rec-field">
-                            <span class="rec-label">Violated Pattern</span>
-                            <p>{{ rec.violated_pattern }}</p>
+                            <span class="rec-label">Goal Impact</span>
+                            <p>{{ rec.goal_impact }}</p>
                         </div>
                         {% endif %}
                     </div>
