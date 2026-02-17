@@ -1,170 +1,223 @@
 {% extends "uploads/base.html" %}
 {% block title %}Analysis Results{% endblock %}
+
+{% block extra_head %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.classList.add('dashboard-layout');
+});
+</script>
+{% endblock %}
+
 {% block content %}
-<h2>UX Analysis — {{ persona_name }}</h2>
+<h2>UX Analysis &mdash; {{ persona_name }}</h2>
 
 {% if analysis %}
 
-{% if sections and recommendations %}
-{# ── Section Navigation ── #}
-<div class="section-nav">
-    <a href="#recommendations" class="active">Recommendations</a>
-    <a href="#friction">Friction Summary</a>
-    <a href="#simulation">Persona Simulation</a>
-    <a href="#understanding">Product Understanding</a>
+{% if sections and dashboard %}
+
+{# ── Executive Summary ── #}
+{% if executive_summary %}
+<div class="executive-summary">
+    <h3>Product Understanding</h3>
+    <span class="clarity-badge clarity-{{ executive_summary.clarity_status }}">
+        {% if executive_summary.clarity_status == "clear" %}Clear
+        {% elif executive_summary.clarity_status == "unclear" %}Needs Work
+        {% else %}Mixed Signals{% endif %}
+    </span>
+    <div class="exec-summary-text">{{ executive_summary.summary }}</div>
+    {% if executive_summary.key_concerns %}
+    <div class="exec-concerns">
+        <h4>Early Signals</h4>
+        <ul>
+            {% for concern in executive_summary.key_concerns %}
+            <li>{{ concern }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{# ── Stats Bar ── #}
+<div class="dashboard-stats">
+    <div class="stat-card stat-critical">
+        <div class="stat-number">{{ dashboard.critical_count }}</div>
+        <div class="stat-label">Critical Issues</div>
+    </div>
+    <div class="stat-card stat-warning">
+        <div class="stat-number">{{ dashboard.total_recommendations }}</div>
+        <div class="stat-label">Recommendations</div>
+    </div>
+    <div class="stat-card stat-info">
+        <div class="stat-number">{{ dashboard.total_friction }}</div>
+        <div class="stat-label">Friction Points</div>
+    </div>
+    <div class="stat-card stat-info">
+        <div class="stat-number">{{ dashboard.problematic_steps_count }}/{{ dashboard.total_steps }}</div>
+        <div class="stat-label">Problem Steps</div>
+    </div>
 </div>
 
-{# ── RECOMMENDATIONS (Hero Section) ── #}
-<section id="recommendations">
-    <h3>Recommendations</h3>
+{# ── Two-Column Grid ── #}
+<div class="dashboard-grid">
 
-    {% if recommendations %}
-    <div class="rec-summary">
-        <span><strong>{{ recommendations|length }}</strong> recommendation{{ recommendations|length|pluralize }}</span>
-        {% for r in recommendations %}
-            {% if r.priority == "high" %}
-                {% with high_count=high_count|default:0|add:1 %}{% endwith %}
+    {# Left: Top Insights (Friction) #}
+    <div class="dashboard-panel">
+        <div class="panel-header">
+            <h3>Top Insights <span class="panel-count">{{ dashboard.total_friction }}</span></h3>
+        </div>
+        <div class="panel-body">
+            {% if dashboard.sorted_friction %}
+                {% for item in dashboard.sorted_friction %}
+                <div class="compact-card sev-{{ item.severity }}">
+                    <div class="compact-card-header">
+                        <div class="compact-card-title">{{ item.description }}</div>
+                        <span class="rec-priority priority-{{ item.severity }}">
+                            {% if item.severity == "high" %}HIGH{% elif item.severity == "med" %}MED{% else %}LOW{% endif %}
+                        </span>
+                    </div>
+                    <div class="compact-card-body">{{ item.root_cause|truncatewords:25 }}</div>
+                    {% if item.pattern_id %}
+                    <div class="compact-card-meta">
+                        <span class="pattern-id-badge">{{ item.pattern_id }}</span>
+                    </div>
+                    {% endif %}
+                    {% if item.persona_reasoning %}
+                    <button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
+                    <div class="expandable-details">
+                        {% if item.root_cause %}
+                        <div class="rec-field">
+                            <span class="rec-label">Root Cause</span>
+                            <p>{{ item.root_cause }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="rec-field">
+                            <span class="rec-label">Why {{ persona_name }} Struggles</span>
+                            <p>{{ item.persona_reasoning }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">No friction items detected.</div>
             {% endif %}
+        </div>
+    </div>
+
+    {# Right: Next Steps (Recommendations) #}
+    <div class="dashboard-panel">
+        <div class="panel-header">
+            <h3>Next Steps <span class="panel-count">{{ dashboard.total_recommendations }}</span></h3>
+        </div>
+        <div class="panel-body">
+            {% if dashboard.sorted_recommendations %}
+                {% for rec in dashboard.sorted_recommendations %}
+                <div class="compact-card sev-{{ rec.priority }}">
+                    <div class="compact-card-header">
+                        <div class="compact-card-title">{{ rec.observed_problem }}</div>
+                        <span class="rec-priority priority-{{ rec.priority }}">
+                            {% if rec.priority == "high" %}HIGH{% elif rec.priority == "med" %}MED{% else %}LOW{% endif %}
+                        </span>
+                    </div>
+                    <div class="compact-card-body"><strong>Fix:</strong> {{ rec.actionable_fix|truncatewords:20 }}</div>
+                    {% if rec.pattern_id %}
+                    <div class="compact-card-meta">
+                        <span class="pattern-id-badge">{{ rec.pattern_id }}</span>
+                    </div>
+                    {% endif %}
+                    <button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
+                    <div class="expandable-details">
+                        {% if rec.why_it_happens %}
+                        <div class="rec-field">
+                            <span class="rec-label">Why It Happens</span>
+                            <p>{{ rec.why_it_happens }}</p>
+                        </div>
+                        {% endif %}
+                        {% if rec.actionable_fix %}
+                        <div class="rec-field">
+                            <span class="rec-label">Full Fix</span>
+                            <p>{{ rec.actionable_fix }}</p>
+                        </div>
+                        {% endif %}
+                        {% if rec.expected_impact %}
+                        <div class="rec-field">
+                            <span class="rec-label">Expected Impact</span>
+                            <p>{{ rec.expected_impact }}</p>
+                        </div>
+                        {% endif %}
+                        {% if rec.violated_pattern %}
+                        <div class="rec-field">
+                            <span class="rec-label">Violated Pattern</span>
+                            <p>{{ rec.violated_pattern }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">No recommendations generated.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{# ── Persona Simulation (Collapsible) ── #}
+{% if simulation_steps %}
+<div class="collapsible-section" id="simulation-section">
+    <div class="collapsible-header" onclick="toggleCollapsible('simulation-section')">
+        <h3>Persona Simulation ({{ dashboard.total_steps }} steps)</h3>
+        <span class="collapsible-toggle">&minus;</span>
+    </div>
+    <div class="collapsible-body">
+        {% for step in simulation_steps %}
+        <div class="sim-step">
+            <div class="sim-header">
+                <span class="sim-step-num">Step {{ step.step }}</span>
+                <span class="sim-verdict {{ step.verdict_class }}">{{ step.verdict }}</span>
+            </div>
+            {% if step.inner_monologue %}
+            <div class="sim-monologue">&ldquo;{{ step.inner_monologue }}&rdquo;</div>
+            {% endif %}
+
+            {% if step.verdict == "Continue" %}
+            <button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
+            <div class="expandable-details">
+            {% else %}
+            <div class="sim-details">
+            {% endif %}
+                {% if step.expectation %}
+                <div class="rec-field">
+                    <span class="rec-label">Expectation</span>
+                    <p>{{ step.expectation }}</p>
+                </div>
+                {% endif %}
+                {% if step.hesitation and step.hesitation != "None" %}
+                <div class="rec-field">
+                    <span class="rec-label">Hesitation</span>
+                    <p>{{ step.hesitation }}</p>
+                </div>
+                {% endif %}
+                {% if step.confusion and step.confusion != "None" %}
+                <div class="rec-field">
+                    <span class="rec-label">Confusion</span>
+                    <p>{{ step.confusion }}</p>
+                </div>
+                {% endif %}
+                {% if step.emotional_state %}
+                <div class="rec-field">
+                    <span class="rec-label">Emotional State</span>
+                    <p>{{ step.emotional_state }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
     </div>
-
-    {% for rec in recommendations %}
-    <div class="rec-card rec-priority-{{ rec.priority }}">
-        <div class="rec-header">
-            <span class="rec-number">#{{ rec.number }}</span>
-            <span class="rec-priority priority-{{ rec.priority }}">
-                {% if rec.priority == "high" %}HIGH{% elif rec.priority == "med" %}MED{% else %}LOW{% endif %}
-            </span>
-        </div>
-
-        {% if rec.observed_problem %}
-        <div class="rec-field">
-            <span class="rec-label">Observed Problem</span>
-            <p>{{ rec.observed_problem }}</p>
-        </div>
-        {% endif %}
-
-        {% if rec.why_it_happens %}
-        <div class="rec-field">
-            <span class="rec-label">Why It Happens</span>
-            <p>{{ rec.why_it_happens }}</p>
-        </div>
-        {% endif %}
-
-        {% if rec.violated_pattern %}
-        <div class="rec-field">
-            <span class="rec-label">Violated UX Pattern</span>
-            <p>{{ rec.violated_pattern }}</p>
-        </div>
-        {% endif %}
-
-        {% if rec.actionable_fix %}
-        <div class="rec-field">
-            <span class="rec-label">Actionable Fix</span>
-            <p>{{ rec.actionable_fix }}</p>
-        </div>
-        {% endif %}
-
-        {% if rec.expected_impact %}
-        <div class="rec-field">
-            <span class="rec-label">Expected Impact</span>
-            <p>{{ rec.expected_impact }}</p>
-        </div>
-        {% endif %}
-    </div>
-    {% endfor %}
-    {% endif %}
-</section>
-
-{# ── FRICTION SUMMARY ── #}
-<section id="friction">
-    <h3>Friction Summary</h3>
-
-    {% if friction_items %}
-    {% for item in friction_items %}
-    <div class="friction-card friction-{{ item.severity }}">
-        <div class="friction-header">
-            <span class="rec-priority priority-{{ item.severity }}">
-                {% if item.severity == "high" %}HIGH{% elif item.severity == "med" %}MED{% else %}LOW{% endif %}
-            </span>
-        </div>
-        {% if item.description %}
-        <div class="rec-field">
-            <span class="rec-label">Issue</span>
-            <p>{{ item.description }}</p>
-        </div>
-        {% endif %}
-        {% if item.root_cause %}
-        <div class="rec-field">
-            <span class="rec-label">Root Cause</span>
-            <p>{{ item.root_cause }}</p>
-        </div>
-        {% endif %}
-        {% if item.persona_reasoning %}
-        <div class="rec-field">
-            <span class="rec-label">Why This Persona Struggles</span>
-            <p>{{ item.persona_reasoning }}</p>
-        </div>
-        {% endif %}
-    </div>
-    {% endfor %}
-    {% else %}
-    <p class="muted">{{ sections.friction_summary }}</p>
-    {% endif %}
-</section>
-
-{# ── PERSONA SIMULATION ── #}
-<section id="simulation">
-    <h3>Persona Simulation</h3>
-
-    {% if simulation_steps %}
-    {% for step in simulation_steps %}
-    <div class="sim-step">
-        <div class="sim-header">
-            <span class="sim-step-num">Step {{ step.step }}</span>
-            <span class="sim-verdict {{ step.verdict_class }}">{{ step.verdict }}</span>
-        </div>
-        {% if step.inner_monologue %}
-        <div class="sim-monologue">"{{ step.inner_monologue }}"</div>
-        {% endif %}
-        <div class="sim-details">
-            {% if step.expectation %}
-            <div class="rec-field">
-                <span class="rec-label">Expectation</span>
-                <p>{{ step.expectation }}</p>
-            </div>
-            {% endif %}
-            {% if step.hesitation and step.hesitation != "None" %}
-            <div class="rec-field">
-                <span class="rec-label">Hesitation</span>
-                <p>{{ step.hesitation }}</p>
-            </div>
-            {% endif %}
-            {% if step.confusion and step.confusion != "None" %}
-            <div class="rec-field">
-                <span class="rec-label">Confusion</span>
-                <p>{{ step.confusion }}</p>
-            </div>
-            {% endif %}
-            {% if step.emotional_state %}
-            <div class="rec-field">
-                <span class="rec-label">Emotional State</span>
-                <p>{{ step.emotional_state }}</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endfor %}
-    {% else %}
-    <p class="muted">{{ sections.persona_simulation }}</p>
-    {% endif %}
-</section>
-
-{# ── PRODUCT UNDERSTANDING ── #}
-<section id="understanding">
-    <h3>Product Understanding</h3>
-    <div class="understanding-content">{{ sections.product_understanding }}</div>
-</section>
+</div>
+{% endif %}
 
 {% else %}
 {# ── Fallback: raw text if parsing failed ── #}
@@ -190,4 +243,28 @@
     <button type="submit" class="btn">Run Analysis</button>
 </form>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDetails(button) {
+    var details = button.nextElementSibling;
+    if (details.classList.contains('expanded')) {
+        details.classList.remove('expanded');
+        button.textContent = 'Show details';
+    } else {
+        details.classList.add('expanded');
+        button.textContent = 'Hide details';
+    }
+}
+
+function toggleCollapsible(sectionId) {
+    var section = document.getElementById(sectionId);
+    if (section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+    } else {
+        section.classList.add('collapsed');
+    }
+}
+</script>
 {% endblock %}

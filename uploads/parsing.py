@@ -1,6 +1,63 @@
 import re
 
 
+def clean_llm_output(text):
+    """Remove markdown artifacts and normalize whitespace for display."""
+    if not text:
+        return ""
+    # Triple asterisks first (nested bold+italic)
+    text = re.sub(r'\*\*\*(.+?)\*\*\*', r'\1', text)
+    # Bold markers
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+    # Italic markers (single asterisks not part of bold)
+    text = re.sub(r'(?<!\*)\*(?!\*)(.+?)\*(?!\*)', r'\1', text)
+    # Collapse multiple spaces
+    text = re.sub(r' {2,}', ' ', text)
+    # Collapse 3+ newlines into 2
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+def parse_executive_summary(product_understanding_text):
+    """Extract a concise executive summary from the product understanding section.
+
+    Returns a dict with clarity_status, summary, and key_concerns.
+    Returns None if input is empty.
+    """
+    if not product_understanding_text:
+        return None
+
+    text = clean_llm_output(product_understanding_text)
+    text_lower = text.lower()
+
+    # Detect clarity status via keywords
+    if any(kw in text_lower for kw in ("immediately clear", "very clear", "well understood", "clearly communicat")):
+        clarity_status = "clear"
+    elif any(kw in text_lower for kw in ("unclear", "confusing", "not clear", "difficult to understand", "does not understand")):
+        clarity_status = "unclear"
+    else:
+        clarity_status = "mixed"
+
+    # Extract summary: first 1-2 sentences
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    summary = ' '.join(sentences[:2]) if sentences else text[:200]
+
+    # Extract key concerns from bullet points
+    concerns = []
+    bullet_matches = re.findall(r'[-*•]\s*(.+)', text)
+    if bullet_matches:
+        concerns = [clean_llm_output(m.strip()) for m in bullet_matches[:3]]
+    elif len(sentences) > 2:
+        # Fall back to subsequent sentences
+        concerns = [s.strip() for s in sentences[2:5] if s.strip()]
+
+    return {
+        "clarity_status": clarity_status,
+        "summary": summary,
+        "key_concerns": concerns,
+    }
+
+
 def parse_analysis_sections(raw_text):
     """Split raw Gemini response into the 4 named sections.
 
@@ -34,7 +91,7 @@ def _extract_field(block, field_name):
     """Extract text after **Field Name**: up to the next **label** or end."""
     pattern = rf'\*\*{re.escape(field_name)}\*\*:?\s*(.*?)(?=\n\s*\d+\.\s*\*\*|\n\s*\*\*[A-Z]|\Z)'
     match = re.search(pattern, block, re.DOTALL | re.IGNORECASE)
-    return match.group(1).strip() if match else ""
+    return clean_llm_output(match.group(1)) if match else ""
 
 
 def parse_recommendations(text):
@@ -59,6 +116,7 @@ def parse_recommendations(text):
         rec = {
             "number": len(recs) + 1,
             "observed_problem": _extract_field(block, "Observed Problem"),
+            "pattern_id": _extract_field(block, "Pattern ID"),
             "why_it_happens": _extract_field(block, "Why It Happens"),
             "violated_pattern": _extract_field(block, "Violated UX Pattern"),
             "actionable_fix": _extract_field(block, "Actionable Fix"),
@@ -99,6 +157,7 @@ def parse_friction_items(text):
 
         item = {
             "description": _extract_field(block, "Description"),
+            "pattern_id": _extract_field(block, "Pattern ID"),
             "severity": "",
             "root_cause": _extract_field(block, "Root cause"),
             "persona_reasoning": _extract_field(block, "Affected persona reasoning"),

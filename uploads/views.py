@@ -199,6 +199,38 @@ def analysis_status_api(request, flow_id):
     return JsonResponse({"status": flow.analysis_status})
 
 
+def _build_dashboard_context(recommendations, friction_items, simulation_steps):
+    """Build sorted/counted dashboard context for the template."""
+    priority_order = {"high": 0, "med": 1, "low": 2}
+
+    sorted_recs = sorted(
+        recommendations or [],
+        key=lambda r: priority_order.get(r.get("priority", "med"), 1),
+    )
+    sorted_friction = sorted(
+        friction_items or [],
+        key=lambda f: priority_order.get(f.get("severity", "med"), 1),
+    )
+
+    high_recs = sum(1 for r in sorted_recs if r.get("priority") == "high")
+    high_friction = sum(1 for f in sorted_friction if f.get("severity") == "high")
+
+    problematic_steps = [
+        s for s in (simulation_steps or [])
+        if s.get("verdict", "").lower() in ("drop", "hesitate")
+    ]
+
+    return {
+        "critical_count": high_recs + high_friction,
+        "total_recommendations": len(sorted_recs),
+        "total_friction": len(sorted_friction),
+        "sorted_recommendations": sorted_recs,
+        "sorted_friction": sorted_friction,
+        "problematic_steps_count": len(problematic_steps),
+        "total_steps": len(simulation_steps) if simulation_steps else 0,
+    }
+
+
 def analysis_view(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
 
@@ -222,26 +254,37 @@ def analysis_view(request, flow_id):
     analysis = getattr(flow, "analysis", None)
     persona_name = PERSONAS.get(flow.persona_type, {}).get("name", "Custom Persona")
 
-    sections = recommendations = friction_items = simulation_steps = None
+    sections = None
+    executive_summary = None
+    recommendations = None
+    friction_items = None
+    simulation_steps = None
+    dashboard = None
+
     if analysis:
         from .parsing import (
             parse_analysis_sections,
+            parse_executive_summary,
             parse_friction_items,
             parse_recommendations,
             parse_simulation_steps,
         )
         sections = parse_analysis_sections(analysis.raw_response)
         if sections:
+            executive_summary = parse_executive_summary(sections.get("product_understanding", ""))
             recommendations = parse_recommendations(sections.get("recommendations", ""))
             friction_items = parse_friction_items(sections.get("friction_summary", ""))
             simulation_steps = parse_simulation_steps(sections.get("persona_simulation", ""))
+            dashboard = _build_dashboard_context(recommendations, friction_items, simulation_steps)
 
     return render(request, "uploads/analysis.html", {
         "flow": flow,
         "analysis": analysis,
         "persona_name": persona_name,
         "sections": sections,
+        "executive_summary": executive_summary,
         "recommendations": recommendations,
         "friction_items": friction_items,
         "simulation_steps": simulation_steps,
+        "dashboard": dashboard,
     })
