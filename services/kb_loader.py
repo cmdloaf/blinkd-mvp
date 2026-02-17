@@ -2,7 +2,7 @@
 Modular knowledge base loader for Blinkd.
 
 Loads persona JSON files from knowledge/personas/ and provides lookup functions.
-Loads Global KB TXT files from knowledge/global/bad_ux/ and knowledge/global/good_ux/.
+Loads Global KB TXT files from knowledge/global_ux/ (paired UX doctrine files).
 Adding a new persona or UX pattern requires only dropping a new file into the
 appropriate directory — no Python code changes needed.
 """
@@ -11,9 +11,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PERSONAS_DIR = BASE_DIR / "knowledge" / "personas"
-GLOBAL_DIR = BASE_DIR / "knowledge" / "global"
-BAD_UX_DIR = GLOBAL_DIR / "bad_ux"
-GOOD_UX_DIR = GLOBAL_DIR / "good_ux"
+GLOBAL_UX_DIR = BASE_DIR / "knowledge" / "global_ux"
 
 REQUIRED_PERSONA_FIELDS = [
     "slug",
@@ -84,7 +82,7 @@ def get_persona_choices():
 
 
 # ---------------------------------------------------------------------------
-# Global KB loading
+# Global KB loading (paired UX doctrine)
 # ---------------------------------------------------------------------------
 
 def _parse_kb_file(filepath):
@@ -92,8 +90,8 @@ def _parse_kb_file(filepath):
 
     Detects field headers as lines where the text before the first colon
     contains only letters, spaces, and parentheses (e.g. "ID:", "Category:",
-    "Opposite (Good UX Principle):"). Collects multiline values including
-    bullet lists under each header.
+    "Bad UX Pattern:"). Collects multiline values including bullet lists
+    under each header.
     """
     text = filepath.read_text(encoding="utf-8")
     fields = {}
@@ -128,92 +126,67 @@ def _parse_kb_file(filepath):
     return fields
 
 
-def load_bad_ux_patterns():
-    """Load all bad UX pattern files from knowledge/global/bad_ux/."""
-    patterns = []
-    if not BAD_UX_DIR.is_dir():
-        return patterns
-    for filepath in sorted(BAD_UX_DIR.iterdir()):
-        if filepath.suffix != ".txt":
-            continue
-        data = _parse_kb_file(filepath)
-        if "id" not in data:
-            print(f"[KB] Warning: {filepath.name} missing 'ID' field, skipping.")
-            continue
-        patterns.append(data)
-    return patterns
+def load_global_ux_patterns():
+    """Load all paired UX doctrine files from knowledge/global_ux/.
 
-
-def load_good_ux_patterns():
-    """Load all good UX pattern files from knowledge/global/good_ux/."""
-    patterns = []
-    if not GOOD_UX_DIR.is_dir():
-        return patterns
-    for filepath in sorted(GOOD_UX_DIR.iterdir()):
-        if filepath.suffix != ".txt":
-            continue
-        data = _parse_kb_file(filepath)
-        if "id" not in data:
-            print(f"[KB] Warning: {filepath.name} missing 'ID' field, skipping.")
-            continue
-        patterns.append(data)
-    return patterns
-
-
-def load_global_kb():
-    """Load the full Global Knowledge Base.
-
-    Returns {"bad_ux": [...], "good_ux": [...]}.
+    Returns {"patterns": [...]}, where each pattern contains:
+    id, category, bad_pattern, symptoms, impact, good_principle, correction.
     """
-    return {
-        "bad_ux": load_bad_ux_patterns(),
-        "good_ux": load_good_ux_patterns(),
-    }
+    patterns = []
+    if not GLOBAL_UX_DIR.is_dir():
+        return {"patterns": patterns}
+
+    for filepath in sorted(GLOBAL_UX_DIR.iterdir()):
+        if filepath.suffix != ".txt":
+            continue
+        data = _parse_kb_file(filepath)
+        if "id" not in data:
+            print(f"[KB] Warning: {filepath.name} missing 'ID' field, skipping.")
+            continue
+        patterns.append({
+            "id": data.get("id", ""),
+            "category": data.get("category", ""),
+            "bad_pattern": data.get("bad ux pattern", ""),
+            "symptoms": data.get("symptoms", ""),
+            "impact": data.get("user impact", ""),
+            "good_principle": data.get("good ux principle", ""),
+            "correction": data.get("actionable correction", ""),
+        })
+
+    return {"patterns": patterns}
 
 
 def format_global_kb_for_prompt():
-    """Format the Global KB as a text block for injection into system prompts.
+    """Format the Global KB as a compact text block for injection into system prompts.
 
-    Includes restriction instructions that constrain the AI to only use
-    patterns from this knowledge base when identifying friction and making
-    recommendations.
+    Strips redundancy and produces a single unified section. Each pattern
+    contains both the bad UX diagnosis and the good UX correction.
     """
-    kb = load_global_kb()
-    sections = []
+    kb = load_global_ux_patterns()
+    lines = [
+        "=== GLOBAL UX KNOWLEDGE BASE ===",
+        "You MUST use ONLY the patterns below when identifying friction and making recommendations.",
+        "Each friction point MUST reference a Pattern ID from this knowledge base.",
+        "Each recommendation MUST use the pattern's Actionable Correction as the basis for the fix.",
+        "Do NOT introduce UX frameworks, heuristics, or principles from outside this knowledge base.",
+        "If no matching pattern exists, state: 'No matching UX doctrine found in GLOBAL_KB.'",
+    ]
 
-    sections.append("=== GLOBAL UX KNOWLEDGE BASE ===")
-    sections.append("")
-    sections.append("You MUST use ONLY the patterns below when identifying friction and making recommendations.")
-    sections.append("Every friction point MUST reference a Bad UX Pattern ID from this knowledge base.")
-    sections.append("Every recommendation MUST reference both the Bad UX Pattern ID and the corresponding Good UX Principle ID.")
-    sections.append("Do NOT introduce UX frameworks, heuristics, or principles from outside this knowledge base.")
-    sections.append("If no matching pattern exists in this knowledge base, state: 'No matching UX principle found in GLOBAL_KB.'")
-    sections.append("")
+    for p in kb["patterns"]:
+        lines.append(f"\n[{p['id']}] ({p['category']})")
+        if p["bad_pattern"]:
+            lines.append(f"Problem: {p['bad_pattern']}")
+        if p["symptoms"]:
+            lines.append(f"Symptoms: {p['symptoms']}")
+        if p["impact"]:
+            lines.append(f"Impact: {p['impact']}")
+        if p["good_principle"]:
+            lines.append(f"Principle: {p['good_principle']}")
+        if p["correction"]:
+            lines.append(f"Correction: {p['correction']}")
 
-    sections.append("--- BAD UX PATTERNS ---")
-    for pattern in kb["bad_ux"]:
-        sections.append(f"\n[{pattern.get('id', 'UNKNOWN')}]")
-        sections.append(f"Category: {pattern.get('category', 'N/A')}")
-        sections.append(f"Description: {pattern.get('description', 'N/A')}")
-        if "symptoms" in pattern:
-            sections.append(f"Symptoms: {pattern['symptoms']}")
-        if "impact" in pattern:
-            sections.append(f"Impact: {pattern['impact']}")
-        if "opposite (good ux principle)" in pattern:
-            sections.append(f"Good UX Counterpart: {pattern['opposite (good ux principle)']}")
-
-    sections.append("\n--- GOOD UX PRINCIPLES ---")
-    for pattern in kb["good_ux"]:
-        sections.append(f"\n[{pattern.get('id', 'UNKNOWN')}]")
-        sections.append(f"Category: {pattern.get('category', 'N/A')}")
-        sections.append(f"Description: {pattern.get('description', 'N/A')}")
-        if "prevents" in pattern:
-            sections.append(f"Prevents: {pattern['prevents']}")
-        if "outcome" in pattern:
-            sections.append(f"Outcome: {pattern['outcome']}")
-
-    sections.append("\n=== END GLOBAL UX KNOWLEDGE BASE ===")
-    return "\n".join(sections)
+    lines.append("\n=== END GLOBAL UX KNOWLEDGE BASE ===")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +196,6 @@ def format_global_kb_for_prompt():
 def build_system_prompt(persona, output_format_instructions, global_kb_block=""):
     """Build a full system prompt from a persona dict and the output format instructions.
 
-    Reconstructs the same prompt structure that was previously hardcoded in personas.py.
     If global_kb_block is provided, it is inserted between simulation rules and the
     evaluation instruction.
     """

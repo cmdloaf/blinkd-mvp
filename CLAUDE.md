@@ -3,7 +3,7 @@
 ## 1. PURPOSE
 Blinkd is a constrained AI UX simulation engine.
 It evaluates product flows using:
-- A file-driven Global UX Knowledge Base (bad + good UX patterns)
+- A file-driven Global UX Knowledge Base (paired UX doctrine patterns)
 - Modular persona templates (loaded from JSON files)
 - Client-specific product input
 
@@ -60,66 +60,53 @@ When suggesting improvements:
 --------------------------------------------------
 ## 3. KNOWLEDGE ARCHITECTURE
 
-### A. GLOBAL_KB (File-Driven)
-Location: `knowledge/global/`
+### A. GLOBAL_KB (File-Driven, Paired Doctrine)
+Location: `knowledge/global_ux/`
 
-Two categories of structured TXT files:
-- `knowledge/global/bad_ux/*.txt` — Bad UX patterns (friction sources)
-- `knowledge/global/good_ux/*.txt` — Good UX principles (remedies)
+Each TXT file is a single paired UX doctrine containing both the bad UX pattern and its corresponding good UX correction. One file = one complete doctrine.
 
-Each bad UX pattern is paired with a good UX counterpart. Current pairings:
+Current patterns:
 
-| Bad UX ID | Good UX ID | Category |
-|---|---|---|
-| `text_density_overload` | `scannable_content` | Cognitive Load |
-| `cta_misplacement` | `strong_cta_alignment` | Conversion Clarity |
-| `cognitive_overload` | `progressive_disclosure` | Cognitive Load |
-| `conversion_blockers` | `conversion_clarity` | Conversion |
-| `onboarding_failure` | `guided_onboarding` | Onboarding |
-| `workflow_interruption` | `uninterrupted_workflow` | Flow Integrity |
-| `mental_model_mismatch` | `consistent_mental_model` | Usability |
-| `missing_affordances` | `visible_affordances` | Interaction Design |
-| `unclear_hierarchy` | `clear_visual_hierarchy` | Visual Design |
-| `expectation_mismatch` | `expectation_alignment` | Usability |
+| Pattern ID | Category |
+|---|---|
+| `text_density_overload` | Cognitive Load |
+| `cta_misplacement` | Conversion Clarity |
+| `cognitive_overload` | Cognitive Load |
+| `conversion_blockers` | Conversion |
+| `onboarding_failure` | Onboarding |
+| `workflow_interruption` | Flow Integrity |
+| `mental_model_mismatch` | Usability |
+| `missing_affordances` | Interaction Design |
+| `unclear_hierarchy` | Visual Design |
+| `expectation_mismatch` | Usability |
 
-**TXT file format (Bad UX):**
+**TXT file format (paired doctrine):**
 ```
 ID: <pattern_id>
 Category: <category>
-Description:
-<multi-line description>
+
+Bad UX Pattern:
+<what the problem looks like>
 
 Symptoms:
 - <symptom 1>
 - <symptom 2>
 
-Impact:
+User Impact:
 <impact description>
 
-Opposite (Good UX Principle):
-<good_ux_id>
-```
+Good UX Principle:
+<what the correction principle is>
 
-**TXT file format (Good UX):**
-```
-ID: <principle_id>
-Category: <category>
-Description:
-<multi-line description>
-
-Prevents:
-- <what it prevents 1>
-- <what it prevents 2>
-
-Outcome:
-<expected outcome>
+Actionable Correction:
+<specific steps to fix it>
 ```
 
 **Content source:** TXT files are populated from UX books, articles, and research materials, distilled into the structured format above.
 
-**Expandability:** To add a new UX pattern, drop a new `.txt` file into `bad_ux/` or `good_ux/`, restart the server. No Python code changes required.
+**Expandability:** To add a new UX pattern, drop a new `.txt` file into `knowledge/global_ux/`, restart the server. No Python code changes required.
 
-Loaded by `services/kb_loader.py` → `load_global_kb()` and injected into every AI system prompt via `format_global_kb_for_prompt()`.
+Loaded by `services/kb_loader.py` → `load_global_ux_patterns()` and injected into every AI system prompt via `format_global_kb_for_prompt()`.
 
 Treat as authoritative UX reference. Recommendations MUST derive from GLOBAL_KB only.
 
@@ -167,8 +154,8 @@ Defines the test environment for each analysis run.
 ### D. HARD CONSTRAINTS
 The AI MUST:
 - Use only GLOBAL_KB + PERSONA_KB + VARIABLE_KB
-- Reference Bad UX Pattern IDs when identifying friction
-- Reference both Bad UX Pattern IDs and Good UX Principle IDs when making recommendations
+- Reference Pattern IDs when identifying friction
+- Derive recommendations from the matched pattern's Actionable Correction
 - Not fabricate missing features
 - Not assume missing UI elements
 - Not introduce external UX knowledge, frameworks, or heuristics
@@ -176,7 +163,7 @@ The AI MUST:
 - Flag missing data instead of guessing
 
 If no matching pattern exists in GLOBAL_KB:
-Return → "No matching UX principle found in GLOBAL_KB."
+Return → "No matching UX doctrine found in GLOBAL_KB."
 
 If insufficient info:
 Return → "Insufficient information to evaluate [X]."
@@ -188,12 +175,12 @@ Return → "Insufficient information to evaluate [X]."
 For each persona:
 
 1. Load persona traits from `knowledge/personas/<slug>.json`
-2. Load Global KB from `knowledge/global/bad_ux/` and `good_ux/`
+2. Load Global KB from `knowledge/global_ux/`
 3. Load product + flow context + user goals from ProductFlow
 4. Inject all three KBs into the system prompt
 5. Simulate step-by-step interaction against stated goals
-6. Identify friction and map to Bad UX Pattern IDs from GLOBAL_KB
-7. Generate recommendations referencing Good UX Principle IDs from GLOBAL_KB
+6. Identify friction and map to Pattern IDs from GLOBAL_KB
+7. Generate recommendations derived from matched pattern's Actionable Correction
 
 Simulation must:
 - Reflect persona psychology
@@ -216,14 +203,14 @@ Always evaluate:
 
 If unclear:
 - Identify breakdown point
-- Map to violated UX pattern (must be a Bad UX Pattern ID from GLOBAL_KB)
-- Recommend fix (must reference a Good UX Principle ID from GLOBAL_KB)
+- Map to violated UX pattern (must be a Pattern ID from GLOBAL_KB)
+- Recommend fix (derived from the matched pattern's Actionable Correction)
 
 
 --------------------------------------------------
 ## 6. FRICTION DETECTION RULES
 
-Check for (must map to GLOBAL_KB Bad UX Pattern IDs):
+Check for (must map to GLOBAL_KB Pattern IDs):
 - `cta_misplacement` — CTA not near intended action
 - `text_density_overload` — Excessive text density
 - `workflow_interruption` — Ads or interruptions within workflow
@@ -236,7 +223,7 @@ Check for (must map to GLOBAL_KB Bad UX Pattern IDs):
 - `mental_model_mismatch` — Product structure doesn't match user thinking
 
 Each friction must include:
-- Bad UX Pattern ID (from GLOBAL_KB)
+- Pattern ID (from GLOBAL_KB)
 - Persona reasoning
 - Severity (Low/Medium/High)
 
@@ -259,23 +246,22 @@ Per step:
 - Verdict: Continue / Hesitate / Drop
 
 ### SECTION 3 — FRICTION SUMMARY
-Top issues (each MUST reference a Bad UX Pattern ID from GLOBAL_KB):
+Top issues (each MUST reference a Pattern ID from GLOBAL_KB):
 - Description
-- Bad UX Pattern ID
+- Pattern ID
 - Severity
 - Root cause (referencing KB pattern description)
 - Affected persona reasoning
 
 ### SECTION 4 — RECOMMENDATIONS
-For each (MUST reference both Bad UX Pattern ID and Good UX Principle ID):
+For each (MUST reference a Pattern ID and derive fix from its Actionable Correction):
 1. Observed Problem
-2. Bad UX Pattern ID
+2. Pattern ID
 3. Why It Happens (persona reasoning)
-4. Violated UX Pattern (from KB — no external patterns)
-5. Good UX Principle ID
-6. Actionable Fix (realistic within Django + HTML/CSS, derived from the Good UX Principle)
-7. Expected Impact
-8. Priority (Low/Med/High)
+4. Violated Pattern (from KB — no external patterns)
+5. Actionable Fix (realistic within Django + HTML/CSS, derived from the pattern's Actionable Correction)
+6. Expected Impact
+7. Priority (Low/Med/High)
 
 
 --------------------------------------------------
@@ -310,8 +296,8 @@ If data incomplete → explicitly flag it.
 
 Valid output must:
 - Be persona-consistent
-- Be friction-traceable (every friction maps to a GLOBAL_KB Bad UX Pattern ID)
-- Contain actionable recommendations (each referencing GLOBAL_KB pattern IDs)
+- Be friction-traceable (every friction maps to a GLOBAL_KB Pattern ID)
+- Contain actionable recommendations (each derived from the matched pattern's Actionable Correction)
 - Avoid hallucinations (no UX advice outside uploaded doctrine)
 - Follow structure exactly
 
@@ -327,9 +313,7 @@ blinkd_mvp/
 ├── blinkd/                     # Django project settings
 │   └── settings.py             # GEMINI_API_KEY, ANTHROPIC_API_KEY (from .env)
 ├── knowledge/                  # File-driven knowledge bases (no Python edits to extend)
-│   ├── global/
-│   │   ├── bad_ux/             # Bad UX pattern TXT files
-│   │   └── good_ux/            # Good UX principle TXT files
+│   ├── global_ux/              # Paired UX doctrine TXT files (bad + good in one file)
 │   └── personas/               # Persona JSON files
 ├── services/
 │   └── kb_loader.py            # Loads personas + Global KB from files, builds prompts
@@ -347,6 +331,6 @@ blinkd_mvp/
 ```
 
 ### Key Files
-- `services/kb_loader.py` — Central loader for both PERSONA_KB and GLOBAL_KB. Functions: `load_all_personas()`, `load_global_kb()`, `format_global_kb_for_prompt()`, `build_system_prompt()`
+- `services/kb_loader.py` — Central loader for both PERSONA_KB and GLOBAL_KB. Functions: `load_all_personas()`, `load_global_ux_patterns()`, `format_global_kb_for_prompt()`, `build_system_prompt()`
 - `uploads/personas.py` — Prompt templates (`OUTPUT_FORMAT_INSTRUCTIONS`, `BASE_SIMULATION_PROMPT`, `CUSTOM_STRUCTURING_PROMPT`) and `get_system_prompt()` which injects Global KB into persona prompts
 - `uploads/llm.py` — Provider routing: tries Gemini first, falls back to Anthropic. No config needed beyond setting API keys in `.env`

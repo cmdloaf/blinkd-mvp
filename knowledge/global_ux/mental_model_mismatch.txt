@@ -1,6 +1,7 @@
 ID: mental_model_mismatch
 Category: Usability
-Description:
+
+Bad UX Pattern:
 The product's conceptual structure, terminology, or navigation does not match how users think about the task. Labels use internal jargon instead of user language. Information is organized by system architecture rather than user goals. Actions produce unexpected results because the interface implies different behavior.
 
 Symptoms:
@@ -10,8 +11,11 @@ Symptoms:
 - Users use workarounds instead of intended pathways
 - Users ask "where is..." or "how do I..." frequently
 
-Impact:
+User Impact:
 Persistent confusion and reduced efficiency. Users lose trust in the interface and develop anxiety about taking actions. Learning curve becomes unnecessarily steep.
 
-Opposite (Good UX Principle):
-consistent_mental_model
+Good UX Principle:
+The product's structure, terminology, and behavior align with how users think about the task. Labels use user language rather than internal jargon. Navigation follows intuitive groupings based on user goals. Actions produce predictable results.
+
+Actionable Correction:
+Use user-facing language instead of internal jargon. Organize navigation by user goals, not system architecture. Ensure actions produce results that match what labels and visual cues imply.

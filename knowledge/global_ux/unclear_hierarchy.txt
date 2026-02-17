@@ -1,6 +1,7 @@
 ID: unclear_hierarchy
 Category: Visual Design
-Description:
+
+Bad UX Pattern:
 Visual layout fails to establish clear priority between elements. Primary actions, secondary actions, and informational content all receive equal visual weight. Headlines, body text, and metadata are not visually differentiated. Users cannot quickly determine what is most important on the page.
 
 Symptoms:
@@ -10,8 +11,11 @@ Symptoms:
 - Users struggle to differentiate primary from secondary actions
 - Eye tracking shows scattered attention patterns
 
-Impact:
+User Impact:
 Users waste time processing low-value content and may miss critical information or actions entirely. The interface feels chaotic and unprofessional, reducing trust.
 
-Opposite (Good UX Principle):
-clear_visual_hierarchy
+Good UX Principle:
+Visual layout establishes clear priority through size, color, contrast, spacing, and positioning. Primary actions are visually dominant, secondary actions are subdued, and informational content is appropriately weighted.
+
+Actionable Correction:
+Use size, color, and contrast to establish visual priority. Make primary actions visually dominant. Subdue secondary actions. Differentiate content levels through typography and spacing.

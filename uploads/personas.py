@@ -2,7 +2,7 @@
 Persona constants and prompt templates for Blinkd UX analysis.
 
 Persona data is loaded from knowledge/personas/*.json via services.kb_loader.
-Global KB is loaded from knowledge/global/bad_ux/ and good_ux/ TXT files.
+Global KB is loaded from knowledge/global_ux/ paired doctrine TXT files.
 This module re-exports loader functions and provides prompt templates
 used by LLM clients.
 """
@@ -32,23 +32,22 @@ For each screenshot/step in the flow, provide:
 - **Verdict**: Continue / Hesitate / Drop
 
 ## SECTION 3 — FRICTION SUMMARY
-List the top issues found. Each issue MUST map to a Bad UX Pattern ID from the Global Knowledge Base:
+List the top issues found. Each issue MUST map to a Pattern ID from the Global Knowledge Base:
 - **Description**: What the issue is
-- **Bad UX Pattern ID**: The ID from the Global KB (e.g., text_density_overload)
+- **Pattern ID**: The ID from the Global KB (e.g., text_density_overload)
 - **Severity**: Low / Medium / High
 - **Root cause**: Why this is a problem, referencing the KB pattern description
 - **Affected persona reasoning**: Why this persona specifically struggles here
 
 ## SECTION 4 — RECOMMENDATIONS
-For each recommendation, you MUST reference both a Bad UX Pattern ID and a Good UX Principle ID from the Global Knowledge Base:
+For each recommendation, you MUST reference a Pattern ID from the Global Knowledge Base and derive the fix from that pattern's Actionable Correction:
 1. **Observed Problem**: What was found
-2. **Bad UX Pattern ID**: The KB pattern this maps to
+2. **Pattern ID**: The KB pattern this maps to
 3. **Why It Happens**: Persona-specific reasoning
-4. **Violated UX Pattern**: Description from the KB (do NOT use patterns outside the KB)
-5. **Good UX Principle ID**: The KB principle that should be applied
-6. **Actionable Fix**: A realistic fix (within Django + HTML/CSS architecture), derived from the Good UX Principle
-7. **Expected Impact**: What improves if fixed
-8. **Priority**: Low / Med / High
+4. **Violated Pattern**: Description from the KB (do NOT use patterns outside the KB)
+5. **Actionable Fix**: A realistic fix (within Django + HTML/CSS architecture), derived from the pattern's Actionable Correction
+6. **Expected Impact**: What improves if fixed
+7. **Priority**: Low / Med / High
 """
 
 # Backwards-compatible dict: slug -> persona data (loaded from JSON files)

@@ -1,6 +1,7 @@
 ID: cognitive_overload
 Category: Cognitive Load
-Description:
+
+Bad UX Pattern:
 Too many choices, inputs, or information presented simultaneously without progressive revelation. Users are asked to process multiple concepts, make multiple decisions, or provide extensive input all at once. Forms with many fields, dashboards with excessive data points, or onboarding flows that explain everything upfront.
 
 Symptoms:
@@ -10,8 +11,11 @@ Symptoms:
 - Users feel overwhelmed and anxious
 - Decision paralysis leads to inaction
 
-Impact:
+User Impact:
 Task abandonment, increased error rates, and negative emotional associations with the product. Users may not return after experiencing overwhelm.
 
-Opposite (Good UX Principle):
-progressive_disclosure
+Good UX Principle:
+Information and options are revealed gradually, showing only what is relevant to the current step or decision. Complex workflows are broken into manageable chunks. Advanced options are available but not shown by default.
+
+Actionable Correction:
+Break complex workflows into manageable steps. Show only what is relevant to the current decision. Hide advanced options behind progressive disclosure. Limit form fields to essentials per step.

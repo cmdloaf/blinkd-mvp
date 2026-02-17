@@ -1,6 +1,7 @@
 ID: workflow_interruption
 Category: Flow Integrity
-Description:
+
+Bad UX Pattern:
 The user's task flow is broken by unexpected detours, popups, ads, unrelated prompts, or forced context switches. Includes modal dialogs during checkout, newsletter popups during onboarding, upsell screens mid-task, or navigating away from the current flow for auxiliary tasks.
 
 Symptoms:
@@ -10,8 +11,11 @@ Symptoms:
 - Users forget what they were doing after the interruption
 - Increased task completion time
 
-Impact:
+User Impact:
 Broken flow state leads to abandonment and frustration. Users associate the product with annoyance rather than efficiency. Task completion rates drop significantly.
 
-Opposite (Good UX Principle):
-uninterrupted_workflow
+Good UX Principle:
+Task flows are designed to be completed without forced detours, popups, or context switches. Auxiliary tasks are accessible but never injected into the critical path. The user maintains focus and momentum from start to finish.
+
+Actionable Correction:
+Remove popups, modals, and upsells from critical task flows. Keep auxiliary tasks accessible but out of the primary path. Ensure users maintain context and momentum throughout.
