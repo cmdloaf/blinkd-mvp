@@ -16,9 +16,23 @@
         .step-indicator .active { color: #111; font-weight: bold; }
         .step-indicator .done { color: #4a4; }
         .screenshot-list { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
-        .screenshot-item { border: 1px solid #ccc; padding: 0.25rem; cursor: grab; border-radius: 4px; background: #fafafa; }
+        .screenshot-item { border: 1px solid #ccc; padding: 0.25rem; cursor: grab; border-radius: 4px; background: #fafafa; position: relative; }
+        .remove-form { position: absolute; top: 2px; right: 2px; margin: 0; padding: 0; z-index: 2; }
+        .remove-btn { position: absolute; top: 2px; right: 2px; z-index: 2; background: rgba(0,0,0,0.55); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .remove-form .remove-btn { position: static; }
+        .remove-btn:hover { background: #dc3545; }
         .screenshot-item img { max-width: 150px; max-height: 150px; display: block; }
         .screenshot-item small { display: block; text-align: center; margin-top: 0.25rem; color: #666; font-size: 0.75rem; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .screenshot-item.uploading { opacity: 0.7; cursor: default; }
+        .screenshot-item.uploading .remove-btn { display: none; }
+        .screenshot-item.failed { border-color: #dc3545; }
+        .screenshot-item.failed .remove-btn { display: flex; }
+        .upload-progress { height: 3px; background: #e0e0e0; border-radius: 2px; margin-top: 4px; overflow: hidden; max-width: 150px; }
+        .upload-progress-bar { height: 100%; background: #4a6cf7; width: 0%; transition: width 0.2s; }
+        .upload-progress-bar.complete { background: #5cb85c; }
+        .retry-btn { background: #dc3545; color: #fff; border: none; border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer; margin-top: 4px; display: block; }
+        .retry-btn:hover { background: #c82333; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .errorlist { color: #c00; list-style: none; padding: 0; }
         .persona-cards { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
         .persona-card { border: 2px solid #ddd; border-radius: 8px; padding: 1rem; cursor: pointer; transition: border-color 0.15s; }

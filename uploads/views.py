@@ -45,20 +45,13 @@ def step2_screenshots(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
 
     if request.method == "POST":
-        files = request.FILES.getlist("screenshots")
-        order_data = request.POST.get("order", "")
-        order_map = {}
-        if order_data:
-            for idx, name in enumerate(order_data.split(",")):
-                order_map[name.strip()] = idx
-
-        for f in files:
-            order = order_map.get(f.name, 0)
-            Screenshot.objects.create(
-                product_flow=flow,
-                image=f,
-                order=order,
-            )
+        # All uploads already happened via AJAX — just apply reorder/removal
+        order_csv = request.POST.get("screenshot_order", "")
+        if order_csv:
+            ids = [x.strip() for x in order_csv.split(",") if x.strip()]
+            flow.screenshots.exclude(pk__in=ids).delete()
+            for idx, sid in enumerate(ids):
+                flow.screenshots.filter(pk=sid).update(order=idx)
         return _redirect_target(request, "step3", flow.id)
 
     existing = flow.screenshots.all()
@@ -68,6 +61,45 @@ def step2_screenshots(request, flow_id):
         "step": 2,
         "next": request.GET.get("next", ""),
     })
+
+
+@require_POST
+def upload_screenshot_ajax(request, flow_id):
+    """Accept a single screenshot file via AJAX, return JSON with id/url/order."""
+    flow = get_object_or_404(ProductFlow, id=flow_id)
+    f = request.FILES.get("file")
+    if not f:
+        return JsonResponse({"error": "No file provided"}, status=400)
+
+    next_order = flow.screenshots.count()
+    screenshot = Screenshot.objects.create(
+        product_flow=flow, image=f, order=next_order,
+    )
+    return JsonResponse({
+        "id": screenshot.pk,
+        "url": screenshot.image.url,
+        "order": screenshot.order,
+    })
+
+
+def _reindex_screenshots(flow):
+    """Re-number screenshot order fields to be sequential (0, 1, 2...)."""
+    for idx, screenshot in enumerate(flow.screenshots.all()):
+        if screenshot.order != idx:
+            screenshot.order = idx
+            screenshot.save(update_fields=["order"])
+
+
+@require_POST
+def delete_screenshot(request, flow_id, screenshot_id):
+    """Delete a single screenshot and re-index the remaining ones."""
+    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow.screenshots.filter(pk=screenshot_id).delete()
+    _reindex_screenshots(flow)
+    next_url = request.POST.get("next", "")
+    if next_url == "confirm":
+        return redirect("uploads:confirm", flow_id=flow.id)
+    return redirect("uploads:step2", flow_id=flow.id)
 
 
 def step3_persona(request, flow_id):

@@ -22,6 +22,11 @@
     <div class="screenshot-list">
         {% for s in screenshots %}
         <div class="screenshot-item" style="cursor: default;">
+            <form method="post" action="{% url 'uploads:delete_screenshot' flow_id=flow.id screenshot_id=s.pk %}" class="remove-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="confirm">
+                <button type="submit" class="remove-btn" title="Remove">&times;</button>
+            </form>
             <img src="{{ s.image.url }}">
             <small>Step {{ forloop.counter }}</small>
         </div>

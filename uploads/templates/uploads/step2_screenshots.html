@@ -5,57 +5,253 @@
 {% endblock %}
 {% block content %}
 <h2>Upload &amp; order your flow screenshots</h2>
-<p>Select your screenshots, then drag to reorder them into your product flow sequence.</p>
-<form method="post" enctype="multipart/form-data" id="screenshot-form">
+<p>Please upload your screenshots in order of the flow you want to test. Click &times; to remove.</p>
+
+<form method="post" id="screenshot-form">
     {% csrf_token %}
-    <input type="file" name="screenshots" id="file-input" multiple accept="image/*">
-    <input type="hidden" name="order" id="order-input">
-    <div id="preview-list" class="screenshot-list"></div>
+    <input type="hidden" name="screenshot_order" id="screenshot-order-input">
+
+    <input type="file" id="file-input" multiple accept="image/*" style="margin-bottom: 0.5rem;">
+    <div id="screenshot-list" class="screenshot-list"></div>
+
     <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
         <a href="{% url 'uploads:step1' %}{% if flow %}?flow_id={{ flow.id }}{% endif %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
-        <button type="submit" class="btn">Next: Select Persona</button>
+        <button type="submit" class="btn" id="submit-btn">Next: Select Persona</button>
     </div>
 </form>
 {% endblock %}
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    var form = document.getElementById("screenshot-form");
     var fileInput = document.getElementById("file-input");
-    var previewList = document.getElementById("preview-list");
-    var orderInput = document.getElementById("order-input");
+    var list = document.getElementById("screenshot-list");
+    var orderInput = document.getElementById("screenshot-order-input");
+    var submitBtn = document.getElementById("submit-btn");
+    var csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    var uploadUrl = "{% url 'uploads:upload_screenshot' flow_id=flow.id %}";
+    var deleteBaseUrl = "{% url 'uploads:step2' flow_id=flow.id %}delete/";
+    var uploadingCount = 0;
 
-    fileInput.addEventListener("change", function () {
-        previewList.innerHTML = "";
-        Array.from(this.files).forEach(function (file) {
-            var div = document.createElement("div");
-            div.className = "screenshot-item";
-            div.setAttribute("data-name", file.name);
-
-            var img = document.createElement("img");
-            img.src = URL.createObjectURL(file);
-
-            var label = document.createElement("small");
-            label.textContent = file.name;
-
-            div.appendChild(img);
-            div.appendChild(label);
-            previewList.appendChild(div);
-        });
-        updateOrder();
+    // ── Render existing screenshots from DB ──
+    {% for s in existing %}
+    addCard({
+        id: "{{ s.pk }}",
+        url: "{{ s.image.url }}",
+        deleteUrl: "{% url 'uploads:delete_screenshot' flow_id=flow.id screenshot_id=s.pk %}"
     });
+    {% endfor %}
 
-    new Sortable(previewList, {
+    updateOrder();
+
+    // ── Sortable (filter out uploading items) ──
+    new Sortable(list, {
         animation: 150,
-        onEnd: updateOrder,
+        filter: ".uploading",
+        onEnd: function () {
+            updateLabels();
+            updateOrder();
+        }
     });
+
+    // ── File selection → immediate upload ──
+    fileInput.addEventListener("change", function () {
+        Array.from(this.files).forEach(function (file) {
+            uploadFile(file);
+        });
+        fileInput.value = "";
+    });
+
+    function uploadFile(file) {
+        // Create card in uploading state
+        var card = document.createElement("div");
+        card.className = "screenshot-item uploading";
+
+        var img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        card.appendChild(img);
+
+        var label = document.createElement("small");
+        label.textContent = "Uploading\u2026";
+        card.appendChild(label);
+
+        var progressWrap = document.createElement("div");
+        progressWrap.className = "upload-progress";
+        var progressBar = document.createElement("div");
+        progressBar.className = "upload-progress-bar";
+        progressWrap.appendChild(progressBar);
+        card.appendChild(progressWrap);
+
+        list.appendChild(card);
+        uploadingCount++;
+        updateSubmitState();
+
+        // Upload via XHR for progress events
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", uploadUrl);
+        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+
+        xhr.upload.addEventListener("progress", function (e) {
+            if (e.lengthComputable) {
+                var pct = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = pct + "%";
+            }
+        });
+
+        xhr.addEventListener("load", function () {
+            uploadingCount--;
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                card.classList.remove("uploading");
+                card.setAttribute("data-id", data.id);
+                card.setAttribute("data-delete-url", deleteBaseUrl + data.id + "/");
+
+                // Replace blob URL with server URL
+                var blobUrl = img.src;
+                img.src = data.url;
+                URL.revokeObjectURL(blobUrl);
+
+                // Add remove button
+                var removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "remove-btn";
+                removeBtn.title = "Remove";
+                removeBtn.innerHTML = "&times;";
+                card.insertBefore(removeBtn, card.firstChild);
+
+                // Progress complete
+                progressBar.classList.add("complete");
+                progressBar.style.width = "100%";
+                setTimeout(function () { progressWrap.remove(); }, 600);
+
+                updateLabels();
+                updateOrder();
+            } else {
+                onUploadFail(card, label, progressWrap, file);
+            }
+            updateSubmitState();
+        });
+
+        xhr.addEventListener("error", function () {
+            uploadingCount--;
+            onUploadFail(card, label, progressWrap, file);
+            updateSubmitState();
+        });
+
+        var fd = new FormData();
+        fd.append("file", file);
+        xhr.send(fd);
+    }
+
+    function onUploadFail(card, label, progressWrap, file) {
+        card.classList.remove("uploading");
+        card.classList.add("failed");
+        label.textContent = "Upload failed";
+        progressWrap.remove();
+
+        // Add remove button
+        var removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "remove-btn";
+        removeBtn.title = "Remove";
+        removeBtn.innerHTML = "&times;";
+        removeBtn.addEventListener("click", function () { card.remove(); updateLabels(); updateOrder(); });
+        card.insertBefore(removeBtn, card.firstChild);
+
+        // Add retry button
+        var retryBtn = document.createElement("button");
+        retryBtn.type = "button";
+        retryBtn.className = "retry-btn";
+        retryBtn.textContent = "Retry";
+        retryBtn.addEventListener("click", function () {
+            card.remove();
+            uploadFile(file);
+        });
+        card.appendChild(retryBtn);
+    }
+
+    // ── Add a card for an already-uploaded screenshot ──
+    function addCard(opts) {
+        var card = document.createElement("div");
+        card.className = "screenshot-item";
+        card.setAttribute("data-id", opts.id);
+        card.setAttribute("data-delete-url", opts.deleteUrl);
+
+        var removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "remove-btn";
+        removeBtn.title = "Remove";
+        removeBtn.innerHTML = "&times;";
+
+        var img = document.createElement("img");
+        img.src = opts.url;
+
+        var label = document.createElement("small");
+        label.textContent = "Step";
+
+        card.appendChild(removeBtn);
+        card.appendChild(img);
+        card.appendChild(label);
+        list.appendChild(card);
+    }
+
+    // ── Delete uploaded screenshot ──
+    list.addEventListener("click", function (e) {
+        var btn = e.target.closest(".remove-btn");
+        if (!btn) return;
+        e.preventDefault();
+        var card = btn.closest(".screenshot-item");
+
+        // Failed cards (no data-id) just remove from DOM
+        if (!card.getAttribute("data-id")) {
+            card.remove();
+            updateLabels();
+            updateOrder();
+            return;
+        }
+
+        var deleteUrl = card.getAttribute("data-delete-url");
+        btn.disabled = true;
+
+        fetch(deleteUrl, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrfToken, "Content-Type": "application/x-www-form-urlencoded" },
+            body: "next=stay",
+            redirect: "manual",
+        }).then(function () {
+            card.remove();
+            updateLabels();
+            updateOrder();
+        });
+    });
+
+    // ── Helpers ──
+    function updateLabels() {
+        var cards = list.querySelectorAll(".screenshot-item:not(.uploading):not(.failed)");
+        cards.forEach(function (card, idx) {
+            var label = card.querySelector("small");
+            if (label) label.textContent = "Step " + (idx + 1);
+        });
+    }
 
     function updateOrder() {
-        var items = previewList.querySelectorAll(".screenshot-item");
-        var names = Array.from(items).map(function (el) {
-            return el.getAttribute("data-name");
-        });
-        orderInput.value = names.join(",");
+        var cards = list.querySelectorAll(".screenshot-item[data-id]");
+        var ids = Array.from(cards).map(function (c) { return c.getAttribute("data-id"); });
+        orderInput.value = ids.join(",");
     }
+
+    function updateSubmitState() {
+        submitBtn.disabled = uploadingCount > 0;
+    }
+
+    // ── Form submit ──
+    form.addEventListener("submit", function (e) {
+        if (uploadingCount > 0) {
+            e.preventDefault();
+            return;
+        }
+        updateOrder();
+    });
 });
 </script>
 {% endblock %}
