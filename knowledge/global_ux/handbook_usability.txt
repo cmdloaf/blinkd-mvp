@@ -1,0 +1,170 @@
+TITLE: Global Bad UX Knowledge Base (Handbook of Usability and User Experience)
+SOURCE: Handbook of Usability and User Experience: Methods and Techniques — Soares, Rebelo, Ahram (CRC Press, 2022)
+
+INFERENCE RULE:
+When a BAD UX pattern is detected, infer a GOOD UX improvement that:
+- improves task effectiveness, efficiency, and satisfaction
+- aligns with user goals, experience level, and context of use
+- reduces cognitive, physical, or emotional friction
+- avoids visual styling prescriptions
+- remains actionable and defensible
+
+---
+
+ID: handbook_goal_misalignment
+Category: Task Fit
+
+Description:
+Systems are built around features or technology instead of what users are trying to accomplish.
+
+Symptoms:
+- Users must adapt their workflow to the system
+- Core tasks require unnecessary steps
+- System success metrics differ from user success
+
+Impact:
+Causes frustration, abandonment, and perceived poor usability.
+
+---
+
+ID: handbook_ignoring_context
+Category: Context of Use
+
+Description:
+Interfaces are designed without considering where, how, and under what conditions users interact.
+
+Symptoms:
+- Same interface for all environments
+- No adaptation to physical, social, or situational context
+- Lab-tested flows that break in real-world use
+
+Impact:
+Usability degrades when conditions differ from design assumptions.
+
+---
+
+ID: handbook_assumed_expertise
+Category: Onboarding
+
+Description:
+Designs presume familiarity with domain concepts, terminology, or workflows.
+
+Symptoms:
+- Technical jargon without explanation
+- No onboarding or progressive disclosure
+- Interfaces optimized only for expert users
+
+Impact:
+Excludes novices and increases learning friction.
+
+---
+
+ID: handbook_poor_feedback
+Category: System Status
+
+Description:
+Users are not informed about what the system is doing or the result of their actions.
+
+Symptoms:
+- Actions without confirmation
+- Delayed responses without progress indicators
+- Unclear success or failure states
+
+Impact:
+Creates uncertainty and mistrust in the system.
+
+---
+
+ID: handbook_low_error_tolerance
+Category: Error Handling
+
+Description:
+Systems fail to anticipate mistakes or help users recover from them.
+
+Symptoms:
+- Strict input validation
+- Errors without guidance
+- No undo or correction mechanisms
+
+Impact:
+Increases anxiety and discourages exploration.
+
+---
+
+ID: handbook_task_interface_mismatch
+Category: Usability
+
+Description:
+The interface structure does not match how users think about or perform tasks.
+
+Symptoms:
+- Functions grouped by system logic, not user logic
+- Important actions hidden behind irrelevant steps
+- Navigation that does not reflect user mental models
+
+Impact:
+Slows task completion and increases cognitive effort.
+
+---
+
+ID: handbook_inconsistent_behavior
+Category: Usability
+
+Description:
+Similar actions behave differently across the system.
+
+Symptoms:
+- Inconsistent terminology
+- Different results for similar inputs
+- Changing interaction patterns without explanation
+
+Impact:
+Users must relearn behaviors and lose confidence.
+
+---
+
+ID: handbook_no_user_control
+Category: Flow Integrity
+
+Description:
+Users are forced into rigid flows without alternatives.
+
+Symptoms:
+- No customization or shortcuts
+- Mandatory linear processes
+- System interruptions that block progress
+
+Impact:
+Reduces efficiency and perceived autonomy.
+
+---
+
+ID: handbook_poor_learnability
+Category: Onboarding
+
+Description:
+Interfaces are difficult to learn or remember after time away.
+
+Symptoms:
+- Complex interactions without cues
+- Overloaded screens for first-time users
+- No reinforcement of learned behaviors
+
+Impact:
+Users forget how to use the system and require relearning.
+
+---
+
+ID: handbook_no_real_user_testing
+Category: Validation
+
+Description:
+Usability decisions are made without observing real user behavior.
+
+Symptoms:
+- Assumptions replacing validation
+- Metrics without behavioral grounding
+- Overreliance on internal opinions
+
+Impact:
+Design decisions drift away from real user needs.

@@ -1,0 +1,234 @@
+TITLE: Global Bad UX Knowledge Base (Kolenda.io)
+SOURCE: Nick Kolenda — UX Guidelines (kolenda.io)
+
+INFERENCE RULE:
+When a BAD UX pattern is detected, infer a GOOD UX improvement that:
+- reduces cognitive load
+- improves clarity toward the stated user goal
+- aligns with the selected persona's expectations
+- avoids prescribing UI styling or visual aesthetics
+- remains actionable and context-aware
+
+---
+
+ID: kolenda_choice_overload
+Category: Cognitive Load
+
+Description:
+Interfaces that present too many options simultaneously overwhelm users and slow decision-making.
+
+Symptoms:
+- Long ungrouped menus
+- Multiple equally weighted actions
+- Feature lists without prioritization
+
+Impact:
+Increases mental effort and hesitation.
+
+---
+
+ID: kolenda_no_context
+Category: Cognitive Load
+
+Description:
+Presenting raw numbers or data without relative meaning forces users to perform mental calculations.
+
+Symptoms:
+- Exact timestamps instead of relative time
+- Metrics without benchmarks
+- Numbers without explanation
+
+Impact:
+Slows comprehension and increases cognitive load.
+
+---
+
+ID: kolenda_no_feedback
+Category: Trust
+
+Description:
+Users receive little or no indication that an action is being processed or has succeeded.
+
+Symptoms:
+- Silent submissions
+- No loading or success indicators
+- Delayed system response without reassurance
+
+Impact:
+Creates uncertainty and mistrust.
+
+---
+
+ID: kolenda_no_input_tolerance
+Category: Error Handling
+
+Description:
+Interfaces reject common human errors instead of accommodating them.
+
+Symptoms:
+- Strict input formats without guidance
+- Error messages without recovery steps
+- No tolerance for typos or mistakes
+
+Impact:
+Users feel blamed and frustrated.
+
+---
+
+ID: kolenda_goal_misalignment
+Category: Flow Integrity
+
+Description:
+The system enforces rigid flows that conflict with how users want to complete tasks.
+
+Symptoms:
+- No shortcuts or customization
+- Forced linear paths
+- Interruptions that block task completion
+
+Impact:
+Creates friction and resistance.
+
+---
+
+ID: kolenda_assumed_knowledge
+Category: Onboarding
+
+Description:
+Interfaces rely on jargon or concepts unfamiliar to novice users.
+
+Symptoms:
+- Technical terminology without explanation
+- No contextual help
+- Expert-only language
+
+Impact:
+Excludes and intimidates new users.
+
+---
+
+ID: kolenda_hard_to_interact
+Category: Interaction Design
+
+Description:
+Interactive elements are small, cramped, or difficult to reach.
+
+Symptoms:
+- Tiny buttons or icons
+- Narrow hover or click zones
+- Controls that disappear too quickly
+
+Impact:
+Increases physical effort and misclicks.
+
+---
+
+ID: kolenda_accusatory_errors
+Category: Error Handling
+
+Description:
+Error feedback does not help users understand or fix the problem.
+
+Symptoms:
+- Generic error messages
+- Blaming language
+- No suggested next step
+
+Impact:
+Users feel stuck and discouraged.
+
+---
+
+ID: kolenda_no_safe_exit
+Category: Trust
+
+Description:
+Actions feel irreversible, increasing anxiety and hesitation.
+
+Symptoms:
+- Permanent changes without undo
+- Excessive confirmation dialogs
+- No history or rollback
+
+Impact:
+Users act cautiously or avoid action.
+
+---
+
+ID: kolenda_unpredictable_outcomes
+Category: Usability
+
+Description:
+Users cannot easily anticipate what will happen after an interaction.
+
+Symptoms:
+- Vague labels
+- Unexpected results
+- Actions that trigger unrelated changes
+
+Impact:
+Breaks trust and predictability.
+
+---
+
+ID: kolenda_ignores_skimming
+Category: Cognitive Load
+
+Description:
+Interfaces require deep reading to understand key information.
+
+Symptoms:
+- Dense paragraphs
+- Buried important details
+- No hierarchy or emphasis
+
+Impact:
+Users miss critical information.
+
+---
+
+ID: kolenda_poor_location_awareness
+Category: Navigation
+
+Description:
+Users cannot tell where they are in a process or system.
+
+Symptoms:
+- Missing breadcrumbs
+- No progress indicators
+- Unclear page purpose
+
+Impact:
+Creates disorientation and hesitation.
+
+---
+
+ID: kolenda_hidden_interactivity
+Category: Interaction Design
+
+Description:
+Users cannot tell which elements are interactive.
+
+Symptoms:
+- Links that look like text
+- Buttons that resemble static elements
+- No hover or focus feedback
+
+Impact:
+Reduces engagement and discoverability.
+
+---
+
+ID: kolenda_visual_noise
+Category: Visual Design
+
+Description:
+Too many elements compete for attention at once.
+
+Symptoms:
+- Decorative content overshadowing actions
+- Redundant instructions
+- Crowded layouts
+
+Impact:
+Fragments attention and slows task completion.

@@ -2,7 +2,7 @@
 Persona constants and prompt templates for Blinkd UX analysis.
 
 Persona data is loaded from knowledge/personas/*.json via services.kb_loader.
-Global KB is loaded from knowledge/global_ux/ paired doctrine TXT files.
+Global KB is loaded from knowledge/global_ux/ bad-UX-only multi-pattern TXT files.
 This module re-exports loader functions and provides prompt templates
 used by LLM clients.
 """
@@ -45,20 +45,20 @@ For each screenshot/step in the flow, provide:
 ## SECTION 4 — FRICTION SUMMARY
 List the top issues found. Each issue MUST map to a Pattern ID from the Global Knowledge Base:
 - **Description**: What the issue is
-- **Pattern ID**: The ID from the Global KB (e.g., text_density_overload)
+- **Pattern ID**: The ID from the Global KB (e.g., kolenda_choice_overload)
 - **Severity**: Low / Medium / High
-- **Root cause**: Why this is a problem, referencing the KB pattern description
+- **Root cause**: Why this is a problem, referencing the bad UX pattern from the KB
 - **Affected persona reasoning**: Why this persona specifically struggles here
 
 SEVERITY REWEIGHTING: Friction that directly blocks goal completion MUST be rated **High** severity regardless of other factors. Cosmetic friction that does not affect goal completion should be rated **Low** unless it compounds with other issues.
 
 ## SECTION 5 — RECOMMENDATIONS
-For each recommendation, you MUST reference a Pattern ID from the Global Knowledge Base and derive the fix from that pattern's Actionable Correction:
+For each recommendation, you MUST reference a Pattern ID from the Global Knowledge Base and infer a good UX improvement from the detected bad pattern:
 1. **Observed Problem**: What was found
 2. **Pattern ID**: The KB pattern this maps to
 3. **Why It Happens**: Persona-specific reasoning
-4. **Violated Pattern**: Description from the KB (do NOT use patterns outside the KB)
-5. **Actionable Fix**: A realistic fix (within Django + HTML/CSS architecture), derived from the pattern's Actionable Correction
+4. **Violated Pattern**: The bad UX pattern detected from the KB (do NOT use patterns outside the KB)
+5. **Actionable Fix**: A realistic fix (within Django + HTML/CSS architecture), inferred from the bad UX pattern — should reduce cognitive load, improve clarity, and align with persona expectations
 6. **Expected Impact**: What improves if fixed
 7. **Priority**: Low / Med / High
 8. **Goal Impact**: "Removes goal blocker" / "Improves goal completion" / "Clarifies goal pathway" / "No direct goal impact"

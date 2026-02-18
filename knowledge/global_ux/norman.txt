@@ -1,0 +1,170 @@
+TITLE: Global Bad UX Knowledge Base (The Design of Everyday Things)
+SOURCE: Don Norman — The Design of Everyday Things (Revised & Expanded Edition, 2013)
+
+INFERENCE RULE:
+When a BAD UX pattern is detected, infer a GOOD UX improvement that:
+- improves discoverability and understanding
+- reduces the gulf of execution and evaluation
+- aligns system behavior with human mental models
+- supports error prevention and recovery
+- avoids visual or aesthetic prescriptions
+
+---
+
+ID: norman_poor_discoverability
+Category: Discoverability
+
+Description:
+Users cannot tell what actions are possible or how to perform them.
+
+Symptoms:
+- Actions require trial and error
+- Critical functions are invisible
+- Users rely on instructions or signs to proceed
+
+Impact:
+Creates confusion and hesitation, even for simple tasks.
+
+---
+
+ID: norman_misleading_signifiers
+Category: Interaction Design
+
+Description:
+The system fails to communicate where or how interaction should occur.
+
+Symptoms:
+- Interactive elements that look static
+- Controls that suggest the wrong action
+- Users push when they should pull
+
+Impact:
+Causes frequent user errors and frustration.
+
+---
+
+ID: norman_mental_model_mismatch
+Category: Usability
+
+Description:
+The system behaves in ways that do not match how users expect it to work.
+
+Symptoms:
+- Unexpected outcomes after actions
+- Unclear cause-and-effect relationships
+- Users blame themselves instead of the system
+
+Impact:
+Breaks trust and learnability.
+
+---
+
+ID: norman_gulf_of_execution
+Category: Usability
+
+Description:
+Users know what they want to do but cannot figure out how to do it.
+
+Symptoms:
+- No obvious next step
+- Actions hidden behind non-obvious interactions
+- Excessive cognitive effort to perform simple tasks
+
+Impact:
+Slows task completion and increases abandonment.
+
+---
+
+ID: norman_gulf_of_evaluation
+Category: System Status
+
+Description:
+Users cannot easily tell whether their action succeeded or failed.
+
+Symptoms:
+- No feedback after interaction
+- Ambiguous system states
+- Results that are hard to interpret
+
+Impact:
+Creates uncertainty and repeated actions.
+
+---
+
+ID: norman_blames_user
+Category: Error Handling
+
+Description:
+Errors are treated as user mistakes rather than design failures.
+
+Symptoms:
+- Error messages without guidance
+- Strict rules with no tolerance
+- No recovery or undo mechanisms
+
+Impact:
+Users feel incompetent and discouraged.
+
+---
+
+ID: norman_overcomplexity
+Category: Cognitive Load
+
+Description:
+Systems include more features or controls than users can reasonably manage.
+
+Symptoms:
+- Control panels that resemble cockpit dashboards
+- Users memorize one workaround and ignore the rest
+- Manuals as a requirement for basic use
+
+Impact:
+Reduces usability and satisfaction.
+
+---
+
+ID: norman_poor_feedback
+Category: System Status
+
+Description:
+The system does not clearly communicate what it is doing or what will happen next.
+
+Symptoms:
+- Silent processing
+- No progress indicators
+- Delayed responses without explanation
+
+Impact:
+Creates anxiety and mistrust.
+
+---
+
+ID: norman_ignoring_error
+Category: Error Handling
+
+Description:
+The system assumes users will act perfectly and consistently.
+
+Symptoms:
+- No tolerance for slips or mistakes
+- Irreversible actions
+- Automation that surprises users
+
+Impact:
+Leads to preventable errors and serious consequences.
+
+---
+
+ID: norman_no_recovery
+Category: Trust
+
+Description:
+Users cannot easily undo, exit, or recover from actions.
+
+Symptoms:
+- Permanent changes without confirmation
+- No safe exits
+- Forced flows
+
+Impact:
+Users hesitate to act or abandon tasks entirely.

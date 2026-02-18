@@ -2,11 +2,12 @@
 Modular knowledge base loader for Blinkd.
 
 Loads persona JSON files from knowledge/personas/ and provides lookup functions.
-Loads Global KB TXT files from knowledge/global_ux/ (paired UX doctrine files).
+Loads Global KB TXT files from knowledge/global_ux/ (bad-UX-only, multi-pattern files).
 Adding a new persona or UX pattern requires only dropping a new file into the
 appropriate directory — no Python code changes needed.
 """
 import json
+import re
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -82,18 +83,17 @@ def get_persona_choices():
 
 
 # ---------------------------------------------------------------------------
-# Global KB loading (paired UX doctrine)
+# Global KB loading (bad-UX-only, multi-pattern files)
 # ---------------------------------------------------------------------------
 
-def _parse_kb_file(filepath):
-    """Parse a structured Global KB .txt file into a dict of field_name -> value.
+def _parse_fields(text):
+    """Parse a text block into a dict of field_name -> value.
 
     Detects field headers as lines where the text before the first colon
     contains only letters, spaces, and parentheses (e.g. "ID:", "Category:",
-    "Bad UX Pattern:"). Collects multiline values including bullet lists
+    "Description:"). Collects multiline values including bullet lists
     under each header.
     """
-    text = filepath.read_text(encoding="utf-8")
     fields = {}
     current_key = None
     current_lines = []
@@ -103,34 +103,62 @@ def _parse_kb_file(filepath):
         if stripped and ":" in stripped:
             potential_key = stripped.split(":", 1)[0].strip()
             potential_value = stripped.split(":", 1)[1].strip()
-            # A valid key starts with a letter and contains only letters, spaces, parens
             if (
                 potential_key
                 and potential_key[0].isalpha()
                 and all(c.isalpha() or c in " ()" for c in potential_key)
             ):
-                # Save previous field
                 if current_key is not None:
                     fields[current_key] = "\n".join(current_lines).strip()
                 current_key = potential_key.lower()
                 current_lines = [potential_value] if potential_value else []
                 continue
-        # Append to current field
         if current_key is not None:
             current_lines.append(line.rstrip())
 
-    # Save last field
     if current_key is not None:
         fields[current_key] = "\n".join(current_lines).strip()
 
     return fields
 
 
+def _parse_multi_pattern_file(filepath):
+    """Parse a multi-pattern Global KB .txt file.
+
+    Files have a preamble (TITLE, SOURCE, INFERENCE RULE) followed by
+    pattern blocks separated by '---'. Each pattern block has ID, Category,
+    Description, Symptoms, Impact.
+
+    Returns a list of pattern dicts.
+    """
+    text = filepath.read_text(encoding="utf-8")
+    blocks = re.split(r'\n-{3,}\s*\n', text)
+
+    patterns = []
+    for block in blocks:
+        block = block.strip()
+        if not block:
+            continue
+        fields = _parse_fields(block)
+        # Skip preamble blocks (they have TITLE/SOURCE but no ID)
+        if "id" not in fields:
+            continue
+        patterns.append({
+            "id": fields.get("id", ""),
+            "category": fields.get("category", ""),
+            "description": fields.get("description", ""),
+            "symptoms": fields.get("symptoms", ""),
+            "impact": fields.get("impact", ""),
+        })
+
+    return patterns
+
+
 def load_global_ux_patterns():
-    """Load all paired UX doctrine files from knowledge/global_ux/.
+    """Load all bad-UX pattern files from knowledge/global_ux/.
 
     Returns {"patterns": [...]}, where each pattern contains:
-    id, category, bad_pattern, symptoms, impact, good_principle, correction.
+    id, category, description, symptoms, impact.
     """
     patterns = []
     if not GLOBAL_UX_DIR.is_dir():
@@ -139,19 +167,11 @@ def load_global_ux_patterns():
     for filepath in sorted(GLOBAL_UX_DIR.iterdir()):
         if filepath.suffix != ".txt":
             continue
-        data = _parse_kb_file(filepath)
-        if "id" not in data:
-            print(f"[KB] Warning: {filepath.name} missing 'ID' field, skipping.")
+        file_patterns = _parse_multi_pattern_file(filepath)
+        if not file_patterns:
+            print(f"[KB] Warning: {filepath.name} has no valid patterns, skipping.")
             continue
-        patterns.append({
-            "id": data.get("id", ""),
-            "category": data.get("category", ""),
-            "bad_pattern": data.get("bad ux pattern", ""),
-            "symptoms": data.get("symptoms", ""),
-            "impact": data.get("user impact", ""),
-            "good_principle": data.get("good ux principle", ""),
-            "correction": data.get("actionable correction", ""),
-        })
+        patterns.extend(file_patterns)
 
     return {"patterns": patterns}
 
@@ -159,31 +179,31 @@ def load_global_ux_patterns():
 def format_global_kb_for_prompt():
     """Format the Global KB as a compact text block for injection into system prompts.
 
-    Strips redundancy and produces a single unified section. Each pattern
-    contains both the bad UX diagnosis and the good UX correction.
+    Each pattern contains only the bad UX diagnosis. The LLM infers good UX
+    improvements from the detected bad patterns.
     """
     kb = load_global_ux_patterns()
     lines = [
         "=== GLOBAL UX KNOWLEDGE BASE ===",
         "You MUST use ONLY the patterns below when identifying friction and making recommendations.",
         "Each friction point MUST reference a Pattern ID from this knowledge base.",
-        "Each recommendation MUST use the pattern's Actionable Correction as the basis for the fix.",
+        "When you detect a bad UX pattern, infer a GOOD UX improvement that:",
+        "- reduces cognitive load",
+        "- improves clarity toward the stated user goal",
+        "- aligns with the selected persona's expectations",
+        "- remains actionable within the product's architecture",
         "Do NOT introduce UX frameworks, heuristics, or principles from outside this knowledge base.",
         "If no matching pattern exists, state: 'No matching UX doctrine found in GLOBAL_KB.'",
     ]
 
     for p in kb["patterns"]:
         lines.append(f"\n[{p['id']}] ({p['category']})")
-        if p["bad_pattern"]:
-            lines.append(f"Problem: {p['bad_pattern']}")
+        if p["description"]:
+            lines.append(f"Problem: {p['description']}")
         if p["symptoms"]:
             lines.append(f"Symptoms: {p['symptoms']}")
         if p["impact"]:
             lines.append(f"Impact: {p['impact']}")
-        if p["good_principle"]:
-            lines.append(f"Principle: {p['good_principle']}")
-        if p["correction"]:
-            lines.append(f"Correction: {p['correction']}")
 
     lines.append("\n=== END GLOBAL UX KNOWLEDGE BASE ===")
     return "\n".join(lines)

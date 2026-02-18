@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% if goal_achievability.breakdown_step and goal_achievability.breakdown_step != "N/A" %}
         <div class="goal-field">
             <span class="rec-label">Breaks Down At</span>
-            <p>Step {{ goal_achievability.breakdown_step }}</p>
+            <p>{{ goal_achievability.breakdown_step }}</p>
         </div>
         {% endif %}
         <div class="goal-meta">
@@ -127,19 +127,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         </span>
                     </div>
                     <div class="compact-card-summary">{{ item.root_cause|truncatewords:25 }}</div>
-                    {% if item.persona_reasoning or item.pattern_id %}
+                    {% if item.persona_reasoning or item.root_cause %}
                     <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
                     <div class="expandable-details">
                         {% if item.root_cause %}
                         <div class="rec-field">
                             <span class="rec-label">Root Cause</span>
                             <p>{{ item.root_cause }}</p>
-                        </div>
-                        {% endif %}
-                        {% if item.pattern_id %}
-                        <div class="rec-field">
-                            <span class="rec-label">UX Doctrine</span>
-                            <p><span class="pattern-id-badge">{{ item.pattern_id }}</span></p>
                         </div>
                         {% endif %}
                         {% if item.persona_reasoning %}
@@ -187,10 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p>{{ rec.why_it_happens }}</p>
                         </div>
                         {% endif %}
-                        {% if rec.violated_pattern or rec.pattern_id %}
+                        {% if rec.violated_pattern %}
                         <div class="rec-field">
-                            <span class="rec-label">Violated UX Doctrine</span>
-                            <p>{% if rec.violated_pattern %}{{ rec.violated_pattern }}{% endif %}{% if rec.pattern_id %} <span class="pattern-id-badge">{{ rec.pattern_id }}</span>{% endif %}</p>
+                            <span class="rec-label">Violated Pattern</span>
+                            <p>{{ rec.violated_pattern }}</p>
                         </div>
                         {% endif %}
                         {% if rec.actionable_fix %}

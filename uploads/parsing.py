@@ -11,6 +11,15 @@ def clean_llm_output(text):
     text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
     # Italic markers (single asterisks not part of bold)
     text = re.sub(r'(?<!\*)\*(?!\*)(.+?)\*(?!\*)', r'\1', text)
+    # Strip Global KB pattern IDs in any format: [bracketed], `backtick`, or bare
+    text = re.sub(r'`(?:kolenda|handbook|norman)_\w+`', '', text)
+    text = re.sub(r'\[(?:kolenda|handbook|norman)_\w+\]', '', text)
+    text = re.sub(r'(?:kolenda|handbook|norman)_\w+', '', text)
+    # Clean up leftover list/punctuation artifacts after stripping IDs
+    text = re.sub(r'(?:,\s*)+\.', '.', text)      # ", , ." → "."
+    text = re.sub(r'(?:,\s*){2,}', ', ', text)    # ", , ," → ","
+    text = re.sub(r'^\s*[,.:]\s*', '', text)       # Leading punctuation
+    text = re.sub(r',\s*$', '', text)              # Trailing comma
     # Collapse multiple spaces
     text = re.sub(r' {2,}', ' ', text)
     # Collapse 3+ newlines into 2

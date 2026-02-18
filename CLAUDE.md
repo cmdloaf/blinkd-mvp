@@ -60,55 +60,63 @@ When suggesting improvements:
 --------------------------------------------------
 ## 3. KNOWLEDGE ARCHITECTURE
 
-### A. GLOBAL_KB (File-Driven, Paired Doctrine)
+### A. GLOBAL_KB (File-Driven, Bad-UX-Only, Inference Model)
 Location: `knowledge/global_ux/`
 
-Each TXT file is a single paired UX doctrine containing both the bad UX pattern and its corresponding good UX correction. One file = one complete doctrine.
+Each TXT file contains multiple bad UX patterns from a single source. The LLM infers good UX improvements from the detected bad patterns — there are no explicit "Good UX Principle" or "Actionable Correction" fields.
 
-Current patterns:
+**Sources (3 files, 34 patterns total):**
 
-| Pattern ID | Category |
-|---|---|
-| `text_density_overload` | Cognitive Load |
-| `cta_misplacement` | Conversion Clarity |
-| `cognitive_overload` | Cognitive Load |
-| `conversion_blockers` | Conversion |
-| `onboarding_failure` | Onboarding |
-| `workflow_interruption` | Flow Integrity |
-| `mental_model_mismatch` | Usability |
-| `missing_affordances` | Interaction Design |
-| `unclear_hierarchy` | Visual Design |
-| `expectation_mismatch` | Usability |
+| File | Source | Patterns |
+|---|---|---|
+| `kolenda.txt` | Nick Kolenda — UX Guidelines (kolenda.io) | 14 |
+| `handbook_usability.txt` | Handbook of Usability and User Experience (CRC Press, 2022) | 10 |
+| `norman.txt` | Don Norman — The Design of Everyday Things (2013) | 10 |
 
-**TXT file format (paired doctrine):**
+**Pattern IDs by source:**
+- **Kolenda**: `kolenda_choice_overload`, `kolenda_no_context`, `kolenda_no_feedback`, `kolenda_no_input_tolerance`, `kolenda_goal_misalignment`, `kolenda_assumed_knowledge`, `kolenda_hard_to_interact`, `kolenda_accusatory_errors`, `kolenda_no_safe_exit`, `kolenda_unpredictable_outcomes`, `kolenda_ignores_skimming`, `kolenda_poor_location_awareness`, `kolenda_hidden_interactivity`, `kolenda_visual_noise`
+- **Handbook**: `handbook_goal_misalignment`, `handbook_ignoring_context`, `handbook_assumed_expertise`, `handbook_poor_feedback`, `handbook_low_error_tolerance`, `handbook_task_interface_mismatch`, `handbook_inconsistent_behavior`, `handbook_no_user_control`, `handbook_poor_learnability`, `handbook_no_real_user_testing`
+- **Norman**: `norman_poor_discoverability`, `norman_misleading_signifiers`, `norman_mental_model_mismatch`, `norman_gulf_of_execution`, `norman_gulf_of_evaluation`, `norman_blames_user`, `norman_overcomplexity`, `norman_poor_feedback`, `norman_ignoring_error`, `norman_no_recovery`
+
+**TXT file format (multi-pattern, `---` separated):**
 ```
+TITLE: <source title>
+SOURCE: <attribution>
+
+INFERENCE RULE:
+When a BAD UX pattern is detected, infer a GOOD UX improvement that:
+- reduces cognitive load
+- improves clarity toward the stated user goal
+- aligns with the selected persona's expectations
+- avoids prescribing UI styling or visual aesthetics
+- remains actionable and context-aware
+
+---
+
 ID: <pattern_id>
 Category: <category>
 
-Bad UX Pattern:
-<what the problem looks like>
+Description:
+<what the bad pattern looks like>
 
 Symptoms:
 - <symptom 1>
 - <symptom 2>
 
-User Impact:
+Impact:
 <impact description>
 
-Good UX Principle:
-<what the correction principle is>
+---
 
-Actionable Correction:
-<specific steps to fix it>
+ID: <next_pattern_id>
+...
 ```
 
-**Content source:** TXT files are populated from UX books, articles, and research materials, distilled into the structured format above.
-
-**Expandability:** To add a new UX pattern, drop a new `.txt` file into `knowledge/global_ux/`, restart the server. No Python code changes required.
+**Expandability:** To add patterns, either add new pattern blocks to an existing file (separated by `---`) or drop a new `.txt` file into `knowledge/global_ux/`. Restart the server. No Python code changes required.
 
 Loaded by `services/kb_loader.py` → `load_global_ux_patterns()` and injected into every AI system prompt via `format_global_kb_for_prompt()`.
 
-Treat as authoritative UX reference. Recommendations MUST derive from GLOBAL_KB only.
+Treat as authoritative UX reference. Recommendations MUST reference GLOBAL_KB patterns only. The LLM infers fixes from the bad patterns.
 
 ---
 
@@ -155,7 +163,7 @@ Defines the test environment for each analysis run.
 The AI MUST:
 - Use only GLOBAL_KB + PERSONA_KB + VARIABLE_KB
 - Reference Pattern IDs when identifying friction
-- Derive recommendations from the matched pattern's Actionable Correction
+- Infer good UX improvements from the matched bad UX pattern
 - Not fabricate missing features
 - Not assume missing UI elements
 - Not introduce external UX knowledge, frameworks, or heuristics
@@ -181,7 +189,7 @@ For each persona:
 5. Simulate step-by-step interaction against stated goals
 6. Evaluate goal achievability — can the persona achieve the PRIMARY USER GOAL through this flow?
 7. Identify friction and map to Pattern IDs from GLOBAL_KB
-8. Generate recommendations derived from matched pattern's Actionable Correction
+8. Generate recommendations by inferring good UX improvements from the detected bad patterns
 
 Simulation must:
 - Reflect persona psychology
@@ -206,23 +214,23 @@ Always evaluate:
 If unclear:
 - Identify breakdown point
 - Map to violated UX pattern (must be a Pattern ID from GLOBAL_KB)
-- Recommend fix (derived from the matched pattern's Actionable Correction)
+- Recommend fix (inferred from the matched bad UX pattern)
 
 
 --------------------------------------------------
 ## 6. FRICTION DETECTION RULES
 
-Check for (must map to GLOBAL_KB Pattern IDs):
-- `cta_misplacement` — CTA not near intended action
-- `text_density_overload` — Excessive text density
-- `workflow_interruption` — Ads or interruptions within workflow
-- `unclear_hierarchy` — Unclear visual hierarchy
-- `cognitive_overload` — Too many choices/inputs at once
-- `missing_affordances` — Interactive elements not visually identifiable
-- `expectation_mismatch` — Interface behavior doesn't match expectations
-- `conversion_blockers` — Unnecessary barriers to conversion
-- `onboarding_failure` — Inadequate new user guidance
-- `mental_model_mismatch` — Product structure doesn't match user thinking
+Check for (must map to GLOBAL_KB Pattern IDs — 34 patterns across 3 sources):
+- Choice overload, cognitive overload, visual noise (`kolenda_choice_overload`, `kolenda_visual_noise`, `norman_overcomplexity`)
+- Poor feedback / system status (`kolenda_no_feedback`, `handbook_poor_feedback`, `norman_poor_feedback`, `norman_gulf_of_evaluation`)
+- Error handling failures (`kolenda_no_input_tolerance`, `kolenda_accusatory_errors`, `handbook_low_error_tolerance`, `norman_blames_user`, `norman_ignoring_error`)
+- Goal/task misalignment (`kolenda_goal_misalignment`, `handbook_goal_misalignment`, `handbook_task_interface_mismatch`)
+- Discoverability / interactivity issues (`kolenda_hidden_interactivity`, `norman_poor_discoverability`, `norman_misleading_signifiers`)
+- Mental model mismatch (`kolenda_unpredictable_outcomes`, `norman_mental_model_mismatch`, `handbook_inconsistent_behavior`)
+- Onboarding / assumed knowledge (`kolenda_assumed_knowledge`, `handbook_assumed_expertise`, `handbook_poor_learnability`)
+- Navigation / location awareness (`kolenda_poor_location_awareness`, `kolenda_ignores_skimming`, `kolenda_no_context`)
+- Trust / recovery (`kolenda_no_safe_exit`, `norman_no_recovery`, `handbook_no_user_control`)
+- Context of use (`handbook_ignoring_context`, `norman_gulf_of_execution`)
 
 Each friction must include:
 - Pattern ID (from GLOBAL_KB)
@@ -266,18 +274,18 @@ Top issues (each MUST reference a Pattern ID from GLOBAL_KB):
 - Description
 - Pattern ID
 - Severity
-- Root cause (referencing KB pattern description)
+- Root cause (referencing the bad UX pattern from the KB)
 - Affected persona reasoning
 
 Goal-blocking friction → auto High severity. Cosmetic friction → Low unless compounding.
 
 ### SECTION 5 — RECOMMENDATIONS
-For each (MUST reference a Pattern ID and derive fix from its Actionable Correction):
+For each (MUST reference a Pattern ID and infer a good UX fix from the bad pattern):
 1. Observed Problem
 2. Pattern ID
 3. Why It Happens (persona reasoning)
-4. Violated Pattern (from KB — no external patterns)
-5. Actionable Fix (realistic within Django + HTML/CSS, derived from the pattern's Actionable Correction)
+4. Violated Pattern (the bad UX pattern from the KB — no external patterns)
+5. Actionable Fix (realistic within Django + HTML/CSS, inferred from the bad UX pattern)
 6. Expected Impact
 7. Priority (Low/Med/High)
 8. Goal Impact ("Removes goal blocker" / "Improves goal completion" / "Clarifies goal pathway" / "No direct goal impact")
@@ -319,7 +327,7 @@ Valid output must:
 - Be persona-consistent
 - Be goal-evaluative (every analysis explicitly judges whether the persona can achieve the stated goal)
 - Be friction-traceable (every friction maps to a GLOBAL_KB Pattern ID)
-- Contain actionable recommendations (each derived from the matched pattern's Actionable Correction)
+- Contain actionable recommendations (each inferred from the matched bad UX pattern)
 - Avoid hallucinations (no UX advice outside uploaded doctrine)
 - Follow structure exactly
 
@@ -335,7 +343,7 @@ blinkd_mvp/
 ├── blinkd/                     # Django project settings
 │   └── settings.py             # GEMINI_API_KEY, ANTHROPIC_API_KEY (from .env)
 ├── knowledge/                  # File-driven knowledge bases (no Python edits to extend)
-│   ├── global_ux/              # Paired UX doctrine TXT files (bad + good in one file)
+│   ├── global_ux/              # Bad-UX-only multi-pattern TXT files (3 sources, 34 patterns)
 │   └── personas/               # Persona JSON files
 ├── services/
 │   └── kb_loader.py            # Loads personas + Global KB from files, builds prompts
@@ -384,9 +392,15 @@ blinkd_mvp/
 Each parsed recommendation contains:
 - `title` — First sentence of `actionable_fix` (action-oriented, for card header)
 - `summary` — First sentence of `observed_problem` (brief context, for card body)
-- `pattern_id` — Cleaned (brackets/backticks stripped)
+- `pattern_id` — Cleaned (brackets/backticks stripped), used internally only
 - `goal_impact` — "Removes goal blocker" / "Improves goal completion" / "Clarifies goal pathway" / "No direct goal impact"
 - Full fields (`observed_problem`, `why_it_happens`, `violated_pattern`, `actionable_fix`, `expected_impact`) shown only in expandable details
+
+### Pattern ID Display
+Pattern IDs are internal identifiers used by the LLM for friction tracing. They are **never shown to end users**:
+- `clean_llm_output()` strips bracketed pattern IDs (e.g., `[kolenda_choice_overload]`) from all displayed text
+- The template does not render pattern_id fields in cards
+- Pattern IDs remain in the parsed data for debugging/traceability but are hidden from the UI
 
 ### Dashboard Metrics
 `_build_dashboard_context()` computes:
@@ -395,9 +409,9 @@ Each parsed recommendation contains:
 - `goal_achievable` = achievable status from goal achievability parsing
 
 ### UI Card Design Rules
-- **Recommendation cards**: Title (bold) + summary (muted) + goal impact badge (inline, colored) + "View details" toggle. Pattern IDs only in expandable details.
-- **Friction cards**: Description (bold) + root cause summary (muted) + "View details" toggle. Pattern IDs only in expandable details.
-- No raw pattern IDs in main card view. No duplicated content blocks.
+- **Recommendation cards**: Title (bold) + summary (muted) + goal impact badge (inline, colored) + "View details" toggle. Expandable details show: "Root Cause", "Violated Pattern", "Full Fix", "Expected Outcome", "Goal Impact".
+- **Friction cards**: Description (bold) + root cause summary (muted) + "View details" toggle. Expandable details show: "Root Cause", "Why [persona] Struggles".
+- No pattern IDs visible to end users. All displayed text is cleaned of bracketed pattern IDs by `clean_llm_output()`.
 
 
 --------------------------------------------------
