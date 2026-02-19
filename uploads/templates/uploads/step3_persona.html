@@ -35,8 +35,8 @@
             </div>
         </label>
     </div>
-    <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
-        <a href="{% url 'uploads:step2' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
+    <div class="button-row">
+        <a href="{% url 'uploads:step2' flow_id=flow.id %}" class="btn-outline">Back</a>
         <button type="submit" class="btn">Next: Define Goals</button>
     </div>
 </form>

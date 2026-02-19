@@ -9,10 +9,10 @@
     <p class="loading-persona">Persona: <strong>{{ persona_name }}</strong></p>
     <p class="loading-message" id="loading-message">Loading persona constraints…</p>
     <div id="loading-error" style="display: none;">
-        <p style="color: #dc3545; font-weight: 600;">Analysis failed. Please try again.</p>
+        <p class="loading-error-text">Analysis failed. Please try again.</p>
         <form method="post" action="{% url 'uploads:start_analysis' flow_id=flow.id %}">
             {% csrf_token %}
-            <button type="submit" class="btn" style="margin-top: 0.5rem;">Retry Analysis</button>
+            <button type="submit" class="btn" style="margin-top: 8px;">Retry Analysis</button>
         </form>
     </div>
 </div>

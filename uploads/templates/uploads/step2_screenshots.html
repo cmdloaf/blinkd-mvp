@@ -11,11 +11,11 @@
     {% csrf_token %}
     <input type="hidden" name="screenshot_order" id="screenshot-order-input">
 
-    <input type="file" id="file-input" multiple accept="image/*" style="margin-bottom: 0.5rem;">
+    <input type="file" id="file-input" multiple accept="image/*" style="margin-bottom: 8px;">
     <div id="screenshot-list" class="screenshot-list"></div>
 
-    <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
-        <a href="{% url 'uploads:step1' %}{% if flow %}?flow_id={{ flow.id }}{% endif %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
+    <div class="button-row">
+        <a href="{% url 'uploads:step1' %}{% if flow %}?flow_id={{ flow.id }}{% endif %}" class="btn-outline">Back</a>
         <button type="submit" class="btn" id="submit-btn">Next: Select Persona</button>
     </div>
 </form>

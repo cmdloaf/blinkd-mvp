@@ -44,7 +44,7 @@
     </div>
     <p><strong>{{ persona_name }}</strong></p>
     {% if persona_data %}
-    <div class="traits" style="margin-top: 0.5rem;">
+    <div class="traits" style="margin-top: 8px;">
         {% for trait in persona_data.traits %}
         <span class="trait">{{ trait }}</span>
         {% endfor %}
@@ -66,10 +66,10 @@
     {% endif %}
 </div>
 
-<div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
-    <a href="{% url 'uploads:step4' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back</a>
+<div class="button-row" style="margin-top: 32px;">
+    <a href="{% url 'uploads:step4' flow_id=flow.id %}" class="btn-outline">Back</a>
     {% if has_analysis %}
-    <a href="{% url 'uploads:analysis' flow_id=flow.id %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center;">View Analysis</a>
+    <a href="{% url 'uploads:analysis' flow_id=flow.id %}" class="btn">View Analysis</a>
     <form method="post" action="{% url 'uploads:start_analysis' flow_id=flow.id %}" style="display: inline;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Processing\u2026';">
         {% csrf_token %}
         <button type="submit" class="btn-outline">Re-run Analysis</button>

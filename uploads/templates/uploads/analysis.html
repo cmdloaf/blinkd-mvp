@@ -278,14 +278,14 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 {% endif %}
 
-<p class="muted" style="margin-top: 1.5rem;">Generated {{ analysis.created_at }}</p>
+<p class="muted" style="margin-top: 24px;">Generated {{ analysis.created_at }}</p>
 
-<div style="margin-top: 1rem; display: flex; gap: 1rem;">
+<div class="button-row">
     <form method="post" style="display: inline;">
         {% csrf_token %}
         <button type="submit" class="btn-outline">Re-run Analysis</button>
     </form>
-    <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center;">Back to Flow</a>
+    <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline">Back to Flow</a>
 </div>
 
 {% else %}
