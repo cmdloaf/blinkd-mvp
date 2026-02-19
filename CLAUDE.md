@@ -238,8 +238,9 @@ Each friction must include:
 - Severity (Low/Medium/High)
 
 Severity reweighting:
-- Friction that directly blocks goal completion → auto High severity
-- Cosmetic friction not affecting goal → deprioritized to Low unless compounding
+- High: Directly blocks goal completion or causes drop-off
+- Medium: Slows or degrades goal completion without fully blocking it
+- Low: Cosmetic friction with no meaningful goal impact. Compound Low → Medium
 
 
 --------------------------------------------------
@@ -277,7 +278,7 @@ Top issues (each MUST reference a Pattern ID from GLOBAL_KB):
 - Root cause (referencing the bad UX pattern from the KB)
 - Affected persona reasoning
 
-Goal-blocking friction → auto High severity. Cosmetic friction → Low unless compounding.
+High = blocks goal. Medium = slows/degrades goal without blocking. Low = cosmetic. Compound Low → Medium.
 
 ### SECTION 5 — RECOMMENDATIONS
 For each (MUST reference a Pattern ID and infer a good UX fix from the bad pattern):

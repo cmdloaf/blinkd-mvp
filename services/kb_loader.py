@@ -266,7 +266,7 @@ GOAL ACHIEVABILITY CHECK (MANDATORY):
 You MUST evaluate whether the persona can achieve the PRIMARY USER GOAL stated in the user message.
 - Assess goal progression at each step of the flow.
 - Identify the exact step where goal achievement breaks down, if applicable.
-- Friction that directly blocks goal completion MUST be classified as High severity.
+- Friction that directly blocks goal completion MUST be classified as High severity. Friction that slows but does not block goal completion should be Medium.
 - Recommendations that remove goal blockers MUST be prioritized above cosmetic fixes.
 - If no goal is provided, state: "Insufficient information to evaluate goal achievability."
 - All blockers must reference Pattern IDs from the Global KB where applicable.

@@ -50,7 +50,10 @@ List the top issues found. Each issue MUST map to a Pattern ID from the Global K
 - **Root cause**: Why this is a problem, referencing the bad UX pattern from the KB
 - **Affected persona reasoning**: Why this persona specifically struggles here
 
-SEVERITY REWEIGHTING: Friction that directly blocks goal completion MUST be rated **High** severity regardless of other factors. Cosmetic friction that does not affect goal completion should be rated **Low** unless it compounds with other issues.
+SEVERITY REWEIGHTING:
+- **High**: Directly blocks goal completion, prevents the persona from achieving the primary goal, or causes drop-off. MUST be rated High regardless of other factors.
+- **Medium**: Slows or degrades goal completion without fully blocking it — confusing steps the persona can work through, inefficiencies that increase time-on-task, or issues that erode confidence without causing abandonment.
+- **Low**: Cosmetic friction with no meaningful goal impact — minor wording, non-blocking inconsistencies, or polish items. Upgrade to Medium if multiple Low issues compound in the same step.
 
 ## SECTION 5 — RECOMMENDATIONS
 For each recommendation, you MUST reference a Pattern ID from the Global Knowledge Base and infer a good UX improvement from the detected bad pattern:
@@ -104,7 +107,7 @@ GOAL ACHIEVABILITY CHECK (MANDATORY):
 You MUST evaluate whether the persona can achieve the PRIMARY USER GOAL stated in the user message.
 - Assess goal progression at each step of the flow.
 - Identify the exact step where goal achievement breaks down, if applicable.
-- Friction that directly blocks goal completion MUST be classified as High severity.
+- Friction that directly blocks goal completion MUST be classified as High severity. Friction that slows but does not block goal completion should be Medium.
 - Recommendations that remove goal blockers MUST be prioritized above cosmetic fixes.
 - If no goal is provided, state: "Insufficient information to evaluate goal achievability."
 - All blockers must reference Pattern IDs from the Global KB where applicable.
