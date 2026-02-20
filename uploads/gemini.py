@@ -1,13 +1,15 @@
+import json
+import re
+
 from django.conf import settings
 
 from google import genai
 from google.genai import types
 
 from .personas import (
-    BASE_SIMULATION_PROMPT,
     CUSTOM_STRUCTURING_PROMPT,
-    GOAL_ACHIEVABILITY_CHECK,
     OUTPUT_FORMAT_INSTRUCTIONS,
+    build_system_prompt,
     format_global_kb_for_prompt,
     get_system_prompt,
 )
@@ -36,15 +38,67 @@ def _read_screenshot(screenshot):
     return types.Part.from_bytes(data=data, mime_type=mime)
 
 
+def _parse_custom_persona_dict(raw_text, description):
+    """Parse LLM JSON response into a validated persona dict for build_system_prompt()."""
+    text = raw_text.strip()
+    text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*```$', '', text)
+    text = text.strip()
+
+    try:
+        data = json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        return {
+            "slug": "custom_persona",
+            "name": "Custom Persona",
+            "demographics": {},
+            "psychographics": {"risk_tolerance": "unknown"},
+            "behavioral_traits": description,
+            "digital_literacy": "unknown",
+            "tool_familiarity": [],
+            "motivations": [description],
+            "emotional_triggers": [],
+            "internal_monologue_style": "Not specified.",
+            "simulation_rules": [
+                "Simulate this persona based on the product background description provided.",
+                "All emotional reactions must tie directly to persona traits. No generic responses.",
+            ],
+        }
+
+    if not isinstance(data.get("demographics"), dict):
+        data["demographics"] = {}
+    if not isinstance(data.get("psychographics"), dict):
+        data["psychographics"] = {}
+    if "risk_tolerance" not in data["psychographics"]:
+        data["psychographics"]["risk_tolerance"] = "unknown"
+
+    for list_field in ("tool_familiarity", "motivations", "emotional_triggers", "simulation_rules"):
+        val = data.get(list_field)
+        if isinstance(val, str):
+            data[list_field] = [val] if val.strip() else []
+        elif isinstance(val, list):
+            data[list_field] = [v for v in val if isinstance(v, str) and v.strip()]
+        else:
+            data[list_field] = []
+
+    if not data["simulation_rules"]:
+        data["simulation_rules"] = [
+            "All emotional reactions must tie directly to persona traits. No generic responses."
+        ]
+
+    data["slug"] = "custom_persona"
+    return data
+
+
 def structure_custom_persona(description):
-    """Use Gemini to convert a free-text persona description into a structured profile."""
+    """Use Gemini to convert a free-text persona description into a structured dict."""
     client = _get_client()
     prompt = CUSTOM_STRUCTURING_PROMPT.format(description=description)
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=prompt,
     )
-    return response.text
+    return _parse_custom_persona_dict(response.text, description)
 
 
 def run_analysis(product_flow):
@@ -54,14 +108,9 @@ def run_analysis(product_flow):
 
     # Build the system prompt based on persona type
     if product_flow.persona_type == "custom":
-        structured = structure_custom_persona(product_flow.custom_persona_description)
+        structured_dict = structure_custom_persona(product_flow.custom_persona_description)
         global_kb_block = format_global_kb_for_prompt()
-        system_prompt = BASE_SIMULATION_PROMPT.format(
-            structured_persona=structured,
-            global_kb=global_kb_block,
-            goal_check=GOAL_ACHIEVABILITY_CHECK,
-            output_format=OUTPUT_FORMAT_INSTRUCTIONS,
-        )
+        system_prompt = build_system_prompt(structured_dict, OUTPUT_FORMAT_INSTRUCTIONS, global_kb_block)
     else:
         system_prompt = get_system_prompt(product_flow.persona_type)
         if not system_prompt:

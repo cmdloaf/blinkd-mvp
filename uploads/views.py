@@ -3,12 +3,83 @@ import threading
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from .forms import GoalsForm, PersonaSelectionForm, ProductBackgroundForm
 from .llm import run_analysis
 from .models import AnalysisResult, ProductFlow, Screenshot
 from .personas import PERSONAS
+
+
+WIZARD_STEPS = [
+    {"num": 1, "name": "Describe", "url_name": "uploads:step1", "needs_flow_id": False},
+    {"num": 2, "name": "Upload", "url_name": "uploads:step2", "needs_flow_id": True},
+    {"num": 3, "name": "Choose", "url_name": "uploads:step3", "needs_flow_id": True},
+    {"num": 4, "name": "Define", "url_name": "uploads:step4", "needs_flow_id": True},
+    {"num": 5, "name": "Review", "url_name": "uploads:confirm", "needs_flow_id": True},
+    {"num": 6, "name": "Analysis", "url_name": "uploads:analysis", "needs_flow_id": True},
+]
+
+
+def _get_max_reachable_step(flow):
+    """Return the highest step number the user can navigate to."""
+    if not flow:
+        return 1
+    if not (flow.product_background and flow.product_background.strip()):
+        return 1
+    if not flow.screenshots.exists():
+        return 2
+    if not (flow.persona_type and flow.persona_type.strip()):
+        return 3
+    if not (flow.goals and flow.goals.strip()):
+        return 4
+    analysis = getattr(flow, "analysis", None)
+    if not analysis:
+        return 5
+    return 6
+
+
+def _build_stepper_context(flow, current_step):
+    """Return list of step dicts with num, name, state, url."""
+    max_reachable = _get_max_reachable_step(flow) if flow else 1
+    steps = []
+    for s in WIZARD_STEPS:
+        num, name, url_name, needs_flow_id = s["num"], s["name"], s["url_name"], s["needs_flow_id"]
+        if num < current_step:
+            state = "done"
+        elif num == current_step:
+            state = "active"
+        elif num <= max_reachable:
+            state = "available"
+        else:
+            state = "locked"
+
+        if num == 1:
+            url = reverse("uploads:step1")
+            if flow:
+                url = url + "?flow_id=" + str(flow.id)
+        elif flow and needs_flow_id:
+            url = reverse(url_name, kwargs={"flow_id": flow.id})
+        else:
+            url = None
+
+        steps.append({"num": num, "name": name, "state": state, "url": url})
+    return steps
+
+
+def _check_prerequisites(flow, target_step):
+    """Return redirect Response if prerequisites not met, else None."""
+    max_reachable = _get_max_reachable_step(flow)
+    if target_step <= max_reachable:
+        return None
+    step_config = next(s for s in WIZARD_STEPS if s["num"] == max_reachable)
+    if max_reachable == 1:
+        url = reverse("uploads:step1")
+        if flow:
+            url = url + "?flow_id=" + str(flow.id)
+        return redirect(url)
+    return redirect(step_config["url_name"], flow_id=flow.id)
 
 
 def _redirect_target(request, default_name, flow_id):
@@ -37,12 +108,16 @@ def step1_background(request):
         "form": form,
         "flow": flow,
         "step": 1,
+        "stepper": _build_stepper_context(flow, 1),
         "next": request.GET.get("next", ""),
     })
 
 
 def step2_screenshots(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
+    guard = _check_prerequisites(flow, 2)
+    if guard:
+        return guard
 
     if request.method == "POST":
         # All uploads already happened via AJAX — just apply reorder/removal
@@ -59,6 +134,7 @@ def step2_screenshots(request, flow_id):
         "flow": flow,
         "existing": existing,
         "step": 2,
+        "stepper": _build_stepper_context(flow, 2),
         "next": request.GET.get("next", ""),
     })
 
@@ -104,6 +180,9 @@ def delete_screenshot(request, flow_id, screenshot_id):
 
 def step3_persona(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
+    guard = _check_prerequisites(flow, 3)
+    if guard:
+        return guard
 
     if request.method == "POST":
         form = PersonaSelectionForm(request.POST)
@@ -125,12 +204,16 @@ def step3_persona(request, flow_id):
         "form": form,
         "personas": PERSONAS,
         "step": 3,
+        "stepper": _build_stepper_context(flow, 3),
         "next": request.GET.get("next", ""),
     })
 
 
 def step4_goals(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
+    guard = _check_prerequisites(flow, 4)
+    if guard:
+        return guard
 
     if request.method == "POST":
         form = GoalsForm(request.POST, instance=flow)
@@ -144,12 +227,16 @@ def step4_goals(request, flow_id):
         "flow": flow,
         "form": form,
         "step": 4,
+        "stepper": _build_stepper_context(flow, 4),
         "next": request.GET.get("next", ""),
     })
 
 
 def confirm(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
+    guard = _check_prerequisites(flow, 5)
+    if guard:
+        return guard
     screenshots = flow.screenshots.all()
     persona_name = PERSONAS.get(flow.persona_type, {}).get("name", "Custom Persona")
     persona_data = PERSONAS.get(flow.persona_type)
@@ -161,6 +248,7 @@ def confirm(request, flow_id):
         "persona_data": persona_data,
         "has_analysis": has_analysis,
         "step": 5,
+        "stepper": _build_stepper_context(flow, 5),
     })
 
 
@@ -213,6 +301,9 @@ def start_analysis(request, flow_id):
 def analysis_loading(request, flow_id):
     """Show loading screen while analysis is processing."""
     flow = get_object_or_404(ProductFlow, id=flow_id)
+    guard = _check_prerequisites(flow, 5)
+    if guard:
+        return guard
 
     if flow.analysis_status == "complete":
         return redirect("uploads:analysis", flow_id=flow.id)
@@ -221,6 +312,7 @@ def analysis_loading(request, flow_id):
     return render(request, "uploads/analysis_loading.html", {
         "flow": flow,
         "persona_name": persona_name,
+        "stepper": _build_stepper_context(flow, 6),
     })
 
 
@@ -273,6 +365,9 @@ def _build_dashboard_context(recommendations, friction_items, simulation_steps, 
 
 def analysis_view(request, flow_id):
     flow = get_object_or_404(ProductFlow, id=flow_id)
+    guard = _check_prerequisites(flow, 6)
+    if guard:
+        return guard
 
     # Re-run analysis (from results page re-run button)
     if request.method == "POST":
@@ -331,4 +426,5 @@ def analysis_view(request, flow_id):
         "friction_items": friction_items,
         "simulation_steps": simulation_steps,
         "dashboard": dashboard,
+        "stepper": _build_stepper_context(flow, 6),
     })

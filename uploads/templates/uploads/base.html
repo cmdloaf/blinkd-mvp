@@ -1,9 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blinkd — {% block title %}Upload{% endblock %}</title>
+    <title>blinkd — {% block title %}Upload{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,7 +27,7 @@
             --neutral: #6B7280;
             --neutral-light: rgba(255, 255, 255, 0.07);
             --font-display: 'Alexandria', sans-serif;
-            --font-body: system-ui, -apple-system, sans-serif;
+            --font-body: 'Alexandria', sans-serif;
             --radius-card: 14px;
             --radius-input: 10px;
             --radius-badge: 9999px;
@@ -78,6 +79,18 @@
 
         p { margin: 0 0 20px 0; color: var(--text-primary); }
         .text-muted, .muted { color: var(--text-muted); font-size: 0.875rem; }
+
+        /* ── Site Header / Logo ── */
+        .site-header {
+            display: flex;
+            justify-content: center;
+            padding: 2rem 0 2.5rem;
+        }
+        .site-logo {
+            height: 100px;
+            width: auto;
+            display: block;
+        }
 
         /* ── Form Elements ── */
         textarea {
@@ -153,19 +166,88 @@
             align-items: center;
         }
 
-        /* ── Step Indicator ── */
-        .step-indicator {
+        /* ── Wizard Stepper ── */
+        .wizard-stepper {
             display: flex;
-            gap: 24px;
+            align-items: flex-start;
+            justify-content: center;
             margin-bottom: 40px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-family: var(--font-display);
-            font-weight: 500;
-            letter-spacing: 0.02em;
         }
-        .step-indicator .active { color: var(--accent); font-weight: 700; }
-        .step-indicator .done { color: var(--success); }
+        .stepper-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stepper-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+        .stepper-step.done .stepper-link,
+        .stepper-step.available .stepper-link {
+            cursor: pointer;
+        }
+        .stepper-step.done .stepper-link:hover .stepper-circle,
+        .stepper-step.available .stepper-link:hover .stepper-circle {
+            filter: brightness(1.15);
+        }
+        .stepper-step.active .stepper-link,
+        .stepper-step.locked .stepper-link {
+            cursor: default;
+        }
+        .stepper-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .stepper-step.done .stepper-circle {
+            background: var(--accent);
+            color: #fff;
+        }
+        .stepper-step.active .stepper-circle {
+            background: var(--accent);
+            color: #fff;
+        }
+        .stepper-step.available .stepper-circle {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+        }
+        .stepper-step.locked .stepper-circle {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.2);
+        }
+        .stepper-label {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 8px;
+        }
+        .stepper-step.done .stepper-label { color: var(--text-primary); }
+        .stepper-step.active .stepper-label { color: var(--accent); font-weight: 700; }
+        .stepper-step.available .stepper-label { color: var(--text-muted); }
+        .stepper-step.locked .stepper-label { color: rgba(255, 255, 255, 0.2); }
+        .stepper-connector {
+            width: 40px;
+            height: 2px;
+            margin-top: 18px;
+            flex-shrink: 0;
+        }
+        .stepper-connector.done { background: var(--accent); }
+        .stepper-connector.active { background: rgba(255, 255, 255, 0.07); }
+        .stepper-connector.available { background: rgba(255, 255, 255, 0.07); }
+        .stepper-connector.locked { background: rgba(255, 255, 255, 0.04); }
 
         /* ── Screenshot Upload ── */
         .screenshot-list { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
@@ -711,13 +793,29 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <h1>Blinkd</h1>
-    <div class="step-indicator">
-        <span class="{% if step == 1 %}active{% elif step > 1 %}done{% endif %}">1. Background</span>
-        <span class="{% if step == 2 %}active{% elif step > 2 %}done{% endif %}">2. Screenshots</span>
-        <span class="{% if step == 3 %}active{% elif step > 3 %}done{% endif %}">3. Persona</span>
-        <span class="{% if step == 4 %}active{% elif step > 4 %}done{% endif %}">4. Goals</span>
-    </div>
+    <header class="site-header">
+        <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="site-logo">
+    </header>
+    {% if stepper %}
+    <nav class="wizard-stepper" aria-label="Wizard progress">
+        {% for s in stepper %}
+        <div class="stepper-step {{ s.state }}">
+            {% if s.url and s.state != "active" %}
+            <a href="{{ s.url }}" class="stepper-link">
+                <span class="stepper-circle">{{ s.num }}</span>
+                <span class="stepper-label">{{ s.name }}</span>
+            </a>
+            {% else %}
+            <span class="stepper-link">
+                <span class="stepper-circle">{{ s.num }}</span>
+                <span class="stepper-label">{{ s.name }}</span>
+            </span>
+            {% endif %}
+        </div>
+        {% if not forloop.last %}<div class="stepper-connector {{ s.state }}"></div>{% endif %}
+        {% endfor %}
+    </nav>
+    {% endif %}
     {% block content %}{% endblock %}
     {% block extra_js %}{% endblock %}
 </body>

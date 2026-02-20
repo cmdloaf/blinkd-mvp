@@ -85,49 +85,38 @@ def get_system_prompt(persona_slug):
     return build_system_prompt(persona, OUTPUT_FORMAT_INSTRUCTIONS, global_kb_block)
 
 
-CUSTOM_STRUCTURING_PROMPT = """Given the following user description of a persona, create a structured persona profile with these exact fields:
+CUSTOM_STRUCTURING_PROMPT = """Given the following user description of a persona, return a JSON object that strictly conforms to this schema. Do not include any text outside the JSON object. Do not use markdown code fences.
 
-- Demographics (age, role, income, devices used)
-- Psychographics (values, attitudes, preferences)
-- Behavioral traits (how they interact with products)
-- Digital literacy (comfort level with technology — Very Low / Low / Medium / High)
-- Risk tolerance (willingness to try unfamiliar things — Very Low / Low / Medium / High)
-- Tool familiarity (what apps/tools they use regularly)
-- Motivations (what drives them to use this product)
-- Emotional triggers (what frustrates or delights them)
-- Internal monologue style (how they think, with 3-5 example quotes)
+{{
+  "name": "<A short descriptive name for this persona, e.g. 'The Cautious Freelancer'>",
+  "demographics": {{
+    "age_range": "<age range as string, e.g. '28-40'>",
+    "role": "<job title or life role>",
+    "income": "<income bracket: low / moderate / high>",
+    "devices": "<primary devices used>"
+  }},
+  "psychographics": {{
+    "values": "<core values as a short phrase>",
+    "approach": "<general approach or attitude>",
+    "risk_tolerance": "<Very Low / Low / Medium / High>",
+    "patience": "<Very Low / Low / Medium / High>",
+    "efficiency_bias": "<Very Low / Low / Medium / High>"
+  }},
+  "behavioral_traits": "<2-4 sentence description of how they interact with digital products>",
+  "digital_literacy": "<Very Low / Low / Medium / High>",
+  "tool_familiarity": ["<tool 1>", "<tool 2>", "<tool 3>"],
+  "motivations": ["<motivation 1>", "<motivation 2>", "<motivation 3>"],
+  "emotional_triggers": ["<trigger 1>", "<trigger 2>", "<trigger 3>"],
+  "internal_monologue_style": "<Description of thinking style with 3-5 example inner-voice quotes>",
+  "simulation_rules": [
+    "<Persona-specific behavioral rule, e.g. 'This persona has low patience — extra steps cause drop-off'>",
+    "<Rule 2>",
+    "<Rule 3>",
+    "All emotional reactions must tie directly to persona traits. No generic responses."
+  ]
+}}
 
 User's description:
 {description}
 
-Return ONLY the structured persona profile, no additional commentary."""
-
-GOAL_ACHIEVABILITY_CHECK = """
-GOAL ACHIEVABILITY CHECK (MANDATORY):
-You MUST evaluate whether the persona can achieve the PRIMARY USER GOAL stated in the user message.
-- Assess goal progression at each step of the flow.
-- Identify the exact step where goal achievement breaks down, if applicable.
-- Friction that directly blocks goal completion MUST be classified as High severity. Friction that slows but does not block goal completion should be Medium.
-- Recommendations that remove goal blockers MUST be prioritized above cosmetic fixes.
-- If no goal is provided, state: "Insufficient information to evaluate goal achievability."
-- All blockers must reference Pattern IDs from the Global KB where applicable.
-"""
-
-BASE_SIMULATION_PROMPT = """You are a UX simulation engine. You are simulating a user persona with the following profile evaluating a product flow.
-
-PERSONA PROFILE:
-{structured_persona}
-
-SIMULATION RULES:
-- All reactions must tie directly to persona traits. No generic responses.
-- Reflect the persona's digital literacy level in how they interpret UI elements.
-- Reflect their risk tolerance in how they react to ambiguity and commitment.
-- Reflect their patience level in how they respond to workflow length.
-- If the persona would realistically drop off, say so and explain why.
-
-{global_kb}
-
-{goal_check}
-
-Evaluate the product flow shown in the screenshots step by step, staying in character.
-{output_format}"""
+Return ONLY the JSON object. No commentary, no markdown, no code fences."""
