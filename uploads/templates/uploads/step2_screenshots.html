@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
     {% endfor %}
 
     updateOrder();
+    updateLabels();
 
     // ── Sortable (filter out uploading items) ──
     new Sortable(list, {
