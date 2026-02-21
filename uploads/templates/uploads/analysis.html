@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
         {% elif executive_summary.clarity_status == "unclear" %}Needs Work
         {% else %}Mixed Signals{% endif %}
     </span>
+    {% if executive_summary.summary %}
     <div class="exec-summary-text">{{ executive_summary.summary }}</div>
+    {% endif %}
     {% if executive_summary.key_concerns %}
     <div class="exec-concerns">
         <h4>Early Signals</h4>

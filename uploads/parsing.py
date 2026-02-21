@@ -11,6 +11,15 @@ def clean_llm_output(text):
     text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
     # Italic markers (single asterisks not part of bold)
     text = re.sub(r'(?<!\*)\*(?!\*)(.+?)\*(?!\*)', r'\1', text)
+    # Strip full "Referenced Pattern ID: ..." or "Pattern ID: ..." fragments (label + IDs)
+    # Must run BEFORE bare ID stripping so the IDs anchor the match
+    text = re.sub(
+        r'[\(\[]?\s*(?:Referenced\s+)?Pattern\s+IDs?\s*:\s*'
+        r'(?:(?:kolenda|handbook|norman)_\w+(?:\s*,\s*)?)+\s*[\)\]]?',
+        '',
+        text,
+        flags=re.IGNORECASE,
+    )
     # Strip Global KB pattern IDs in any format: [bracketed], `backtick`, or bare
     text = re.sub(r'`(?:kolenda|handbook|norman)_\w+`', '', text)
     text = re.sub(r'\[(?:kolenda|handbook|norman)_\w+\]', '', text)
@@ -47,9 +56,13 @@ def parse_executive_summary(product_understanding_text):
     else:
         clarity_status = "mixed"
 
-    # Extract summary: first 1-2 sentences
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    summary = ' '.join(sentences[:2]) if sentences else text[:200]
+    # Fixed one-liner keyed on clarity status — avoids duplicating the bullet content below.
+    _CLARITY_SUMMARY = {
+        "clear":   "The product's purpose is immediately clear to this persona.",
+        "unclear": "The product's purpose presents clarity challenges for this persona.",
+        "mixed":   "The product's purpose is partially clear, with some early confusion signals.",
+    }
+    summary = _CLARITY_SUMMARY[clarity_status]
 
     # Extract key concerns from bullet points
     concerns = []
@@ -192,7 +205,7 @@ def _extract_field(block, field_name):
     - ``*   **Field**: value``  (bullet-indented)
     - ``- **Field**: value``  (dash bullet)
     """
-    pattern = rf'\*\*{re.escape(field_name)}\*\*:?\s*(.*?)(?=\n\s*\d+\.\s+\*\*|\n\s*[-*]\s+\*\*|\n\s*\*\*[A-Z]|\Z)'
+    pattern = rf'\*\*{re.escape(field_name)}\*\*:?\s*(.*?)(?=\n\s*\d+\.\s+\*\*|\n\s*[-*•]\s+\*\*|\n\s*\*\*\w|\Z)'
     match = re.search(pattern, block, re.DOTALL | re.IGNORECASE)
     return clean_llm_output(match.group(1)) if match else ""
 
@@ -318,10 +331,10 @@ def parse_simulation_steps(text):
         return None
 
     steps = []
-    # Split on **Step #** or **Step <number>** patterns
-    blocks = re.split(r'\n(?=[-*]\s*\*\*Step\s)', text)
+    # Split on **Step #** or **Step <number>** patterns (bullet optional, word boundary)
+    blocks = re.split(r'\n(?=\s*[-*•]?\s*\*\*Step\b)', text)
     # Also handle case where first block starts with the step
-    if blocks and re.match(r'[-*]?\s*\*\*Step\s', blocks[0]):
+    if blocks and re.match(r'\s*[-*•]?\s*\*\*Step\b', blocks[0]):
         pass
     elif len(blocks) > 1:
         blocks = blocks[1:]
@@ -331,7 +344,7 @@ def parse_simulation_steps(text):
         if not block:
             continue
 
-        step_match = re.search(r'\*\*Step\s*#?\s*\*\*:?\s*(.*?)(?=\n|$)', block)
+        step_match = re.search(r'\*\*Step\s*#?(\d+)[^*]*\*\*:?\s*(.*?)(?=\n|$)', block)
         step_num = step_match.group(1).strip() if step_match else str(len(steps) + 1)
 
         step = {

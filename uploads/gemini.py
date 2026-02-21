@@ -137,6 +137,7 @@ def run_analysis(product_flow):
         model="gemini-2.5-flash",
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,
+            max_output_tokens=65536,
         ),
         contents=contents,
     )

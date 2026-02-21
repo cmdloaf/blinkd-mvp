@@ -15,7 +15,7 @@ from .personas import (
 )
 
 # Vision-capable model for screenshot analysis
-ANTHROPIC_MODEL = "claude-sonnet-4-5-20250929"
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
 
 
 def _get_client():
@@ -152,7 +152,7 @@ def run_analysis(product_flow):
 
     message = client.messages.create(
         model=ANTHROPIC_MODEL,
-        max_tokens=8192,
+        max_tokens=16000,
         system=system_prompt,
         messages=[{"role": "user", "content": content}],
     )
