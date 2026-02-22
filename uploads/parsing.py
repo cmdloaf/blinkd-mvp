@@ -66,6 +66,7 @@ def parse_executive_summary(product_understanding_text):
 
     # Extract key concerns from bullet points
     concerns = []
+    sentences = re.split(r'(?<=[.!?])\s+', text)
     bullet_matches = re.findall(r'[-*•]\s*(.+)', text)
     if bullet_matches:
         concerns = [clean_llm_output(m.strip()) for m in bullet_matches[:3]]

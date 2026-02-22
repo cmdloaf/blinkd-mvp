@@ -1,6 +1,6 @@
+import logging
 import threading
 
-from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,6 +10,8 @@ from .forms import GoalsForm, PersonaSelectionForm, ProductBackgroundForm
 from .llm import run_analysis
 from .models import AnalysisResult, ProductFlow, Screenshot
 from .personas import PERSONAS
+
+logger = logging.getLogger(__name__)
 
 
 WIZARD_STEPS = [
@@ -265,7 +267,7 @@ def _run_analysis_in_background(flow_id):
         flow.analysis_status = "complete"
         flow.save(update_fields=["analysis_status"])
     except Exception as e:
-        print(f"[DEBUG] Background analysis ERROR: {type(e).__name__}: {e}")
+        logger.exception("Background analysis failed")
         try:
             flow = ProductFlow.objects.get(id=flow_id)
             flow.analysis_status = "failed"

@@ -2,7 +2,11 @@
 Provider-agnostic LLM interface for Blinkd.
 Tries Gemini first (priority), falls back to Anthropic if Gemini fails or has no key.
 """
+import logging
+
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def _providers():
@@ -34,7 +38,7 @@ def structure_custom_persona(description):
         except Exception:
             if provider == providers[-1]:
                 raise
-            print(f"[LLM] {provider} failed for structure_custom_persona, falling back...")
+            logger.warning(f"{provider} failed for structure_custom_persona, trying next provider")
     raise RuntimeError("No LLM provider available.")
 
 
@@ -49,5 +53,5 @@ def run_analysis(product_flow):
         except Exception:
             if provider == providers[-1]:
                 raise
-            print(f"[LLM] {provider} failed for run_analysis, falling back...")
+            logger.warning(f"{provider} failed for run_analysis, trying next provider")
     raise RuntimeError("No LLM provider available.")

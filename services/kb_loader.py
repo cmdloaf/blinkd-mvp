@@ -7,8 +7,11 @@ Adding a new persona or UX pattern requires only dropping a new file into the
 appropriate directory — no Python code changes needed.
 """
 import json
+import logging
 import re
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PERSONAS_DIR = BASE_DIR / "knowledge" / "personas"
@@ -169,7 +172,7 @@ def load_global_ux_patterns():
             continue
         file_patterns = _parse_multi_pattern_file(filepath)
         if not file_patterns:
-            print(f"[KB] Warning: {filepath.name} has no valid patterns, skipping.")
+            logger.warning(f"{filepath.name} has no valid patterns, skipping")
             continue
         patterns.extend(file_patterns)
 
