@@ -8,6 +8,7 @@ class ProductBackgroundForm(forms.ModelForm):
     class Meta:
         model = ProductFlow
         fields = ["product_background"]
+        labels = {"product_background": ""}
         widgets = {
             "product_background": forms.Textarea(attrs={
                 "rows": 10,
@@ -23,6 +24,7 @@ class GoalsForm(forms.ModelForm):
     class Meta:
         model = ProductFlow
         fields = ["goals"]
+        labels = {"goals": ""}
         widgets = {
             "goals": forms.Textarea(attrs={
                 "rows": 4,
