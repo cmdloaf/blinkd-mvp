@@ -68,6 +68,7 @@
 
 <div class="button-row" style="margin-top: 32px;">
     <a href="{% url 'uploads:step4' flow_id=flow.id %}" class="btn-outline">Back</a>
+    <a href="{% url 'uploads:dashboard' %}" class="btn-outline">Save &amp; exit</a>
     {% if has_analysis %}
     <a href="{% url 'uploads:analysis' flow_id=flow.id %}" class="btn">View Analysis</a>
     <form method="post" action="{% url 'uploads:start_analysis' flow_id=flow.id %}" style="display: inline;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Processing\u2026';">

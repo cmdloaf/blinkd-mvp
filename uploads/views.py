@@ -1,6 +1,7 @@
 import logging
 import threading
 
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -12,6 +13,16 @@ from .models import AnalysisResult, ProductFlow, Screenshot
 from .personas import PERSONAS
 
 logger = logging.getLogger(__name__)
+
+
+def landing(request):
+    return render(request, "uploads/landing.html")
+
+
+@login_required
+def dashboard(request):
+    flows = ProductFlow.objects.filter(user=request.user).order_by("-created_at")
+    return render(request, "uploads/dashboard.html", {"flows": flows})
 
 
 WIZARD_STEPS = [
@@ -91,9 +102,10 @@ def _redirect_target(request, default_name, flow_id):
     return redirect(f"uploads:{default_name}", flow_id=flow_id)
 
 
+@login_required
 def step1_background(request):
     flow_id = request.GET.get("flow_id")
-    flow = get_object_or_404(ProductFlow, id=flow_id) if flow_id else None
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user) if flow_id else None
 
     if request.method == "POST":
         if flow:
@@ -101,7 +113,12 @@ def step1_background(request):
         else:
             form = ProductBackgroundForm(request.POST)
         if form.is_valid():
-            flow = form.save()
+            flow = form.save(commit=False)
+            if not flow.user_id:
+                flow.user = request.user
+            flow.save()
+            if request.POST.get("save_exit"):
+                return redirect("uploads:dashboard")
             return _redirect_target(request, "step2", flow.id)
     else:
         form = ProductBackgroundForm(instance=flow) if flow else ProductBackgroundForm()
@@ -115,8 +132,9 @@ def step1_background(request):
     })
 
 
+@login_required
 def step2_screenshots(request, flow_id):
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     guard = _check_prerequisites(flow, 2)
     if guard:
         return guard
@@ -141,13 +159,28 @@ def step2_screenshots(request, flow_id):
     })
 
 
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+_MAX_SCREENSHOT_SIZE = 10 * 1024 * 1024  # 10 MB
+_MAX_SCREENSHOTS_PER_FLOW = 20
+
+
+@login_required
 @require_POST
 def upload_screenshot_ajax(request, flow_id):
     """Accept a single screenshot file via AJAX, return JSON with id/url/order."""
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     f = request.FILES.get("file")
     if not f:
         return JsonResponse({"error": "No file provided"}, status=400)
+
+    if f.content_type not in _ALLOWED_IMAGE_TYPES:
+        return JsonResponse({"error": "Only JPEG, PNG, WEBP, and GIF images are allowed."}, status=400)
+
+    if f.size > _MAX_SCREENSHOT_SIZE:
+        return JsonResponse({"error": "File too large. Maximum size is 10 MB."}, status=400)
+
+    if flow.screenshots.count() >= _MAX_SCREENSHOTS_PER_FLOW:
+        return JsonResponse({"error": f"Maximum {_MAX_SCREENSHOTS_PER_FLOW} screenshots per flow."}, status=400)
 
     next_order = flow.screenshots.count()
     screenshot = Screenshot.objects.create(
@@ -168,10 +201,11 @@ def _reindex_screenshots(flow):
             screenshot.save(update_fields=["order"])
 
 
+@login_required
 @require_POST
 def delete_screenshot(request, flow_id, screenshot_id):
     """Delete a single screenshot and re-index the remaining ones."""
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     flow.screenshots.filter(pk=screenshot_id).delete()
     _reindex_screenshots(flow)
     next_url = request.POST.get("next", "")
@@ -180,8 +214,9 @@ def delete_screenshot(request, flow_id, screenshot_id):
     return redirect("uploads:step2", flow_id=flow.id)
 
 
+@login_required
 def step3_persona(request, flow_id):
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     guard = _check_prerequisites(flow, 3)
     if guard:
         return guard
@@ -194,6 +229,8 @@ def step3_persona(request, flow_id):
                 "custom_persona_description", ""
             )
             flow.save()
+            if request.POST.get("save_exit"):
+                return redirect("uploads:dashboard")
             return _redirect_target(request, "step4", flow.id)
     else:
         form = PersonaSelectionForm(initial={
@@ -211,8 +248,9 @@ def step3_persona(request, flow_id):
     })
 
 
+@login_required
 def step4_goals(request, flow_id):
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     guard = _check_prerequisites(flow, 4)
     if guard:
         return guard
@@ -221,6 +259,8 @@ def step4_goals(request, flow_id):
         form = GoalsForm(request.POST, instance=flow)
         if form.is_valid():
             form.save()
+            if request.POST.get("save_exit"):
+                return redirect("uploads:dashboard")
             return _redirect_target(request, "confirm", flow.id)
     else:
         form = GoalsForm(instance=flow)
@@ -234,8 +274,9 @@ def step4_goals(request, flow_id):
     })
 
 
+@login_required
 def confirm(request, flow_id):
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     guard = _check_prerequisites(flow, 5)
     if guard:
         return guard
@@ -278,10 +319,11 @@ def _run_analysis_in_background(flow_id):
         connection.close()
 
 
+@login_required
 @require_POST
 def start_analysis(request, flow_id):
     """Start AI analysis in background and redirect to loading page."""
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
 
     if flow.analysis_status == "processing":
         return redirect("uploads:analysis_loading", flow_id=flow.id)
@@ -299,10 +341,11 @@ def start_analysis(request, flow_id):
     return redirect("uploads:analysis_loading", flow_id=flow.id)
 
 
+@login_required
 @require_GET
 def analysis_loading(request, flow_id):
     """Show loading screen while analysis is processing."""
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     guard = _check_prerequisites(flow, 5)
     if guard:
         return guard
@@ -318,10 +361,11 @@ def analysis_loading(request, flow_id):
     })
 
 
+@login_required
 @require_GET
 def analysis_status_api(request, flow_id):
     """JSON endpoint for polling analysis status."""
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     return JsonResponse({"status": flow.analysis_status})
 
 
@@ -365,8 +409,9 @@ def _build_dashboard_context(recommendations, friction_items, simulation_steps, 
     }
 
 
+@login_required
 def analysis_view(request, flow_id):
-    flow = get_object_or_404(ProductFlow, id=flow_id)
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
     guard = _check_prerequisites(flow, 6)
     if guard:
         return guard

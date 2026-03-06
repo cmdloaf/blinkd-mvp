@@ -1,6 +1,8 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
+from django.urls import reverse
 
 from .personas import PERSONA_CHOICES
 
@@ -14,6 +16,19 @@ class ProductFlow(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="flows",
+    )
+    name = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Short name for this test run, e.g. 'Onboarding flow v2'",
+    )
     product_background = models.TextField(
         help_text="Product description, value prop, target audience, use cases"
     )
@@ -32,6 +47,24 @@ class ProductFlow(models.Model):
 
     def __str__(self):
         return f"ProductFlow {self.id} ({self.created_at:%Y-%m-%d})"
+
+    @property
+    def title(self):
+        if self.name and self.name.strip():
+            return self.name.strip()
+        first_line = self.product_background.strip().split("\n")[0]
+        if not first_line:
+            return "Untitled flow"
+        return first_line[:80] + "…" if len(first_line) > 80 else first_line
+
+    def get_next_url(self):
+        if not self.screenshots.exists():
+            return reverse("uploads:step2", kwargs={"flow_id": self.id})
+        if not self.persona_type:
+            return reverse("uploads:step3", kwargs={"flow_id": self.id})
+        if not self.goals:
+            return reverse("uploads:step4", kwargs={"flow_id": self.id})
+        return reverse("uploads:confirm", kwargs={"flow_id": self.id})
 
 
 class Screenshot(models.Model):

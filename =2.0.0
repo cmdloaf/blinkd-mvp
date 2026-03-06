@@ -1,0 +1,112 @@
+Collecting supabase
+  Downloading supabase-2.28.0-py3-none-any.whl.metadata (4.6 kB)
+Collecting realtime==2.28.0 (from supabase)
+  Downloading realtime-2.28.0-py3-none-any.whl.metadata (7.0 kB)
+Collecting supabase-functions==2.28.0 (from supabase)
+  Downloading supabase_functions-2.28.0-py3-none-any.whl.metadata (2.4 kB)
+Collecting storage3==2.28.0 (from supabase)
+  Downloading storage3-2.28.0-py3-none-any.whl.metadata (2.1 kB)
+Collecting supabase-auth==2.28.0 (from supabase)
+  Downloading supabase_auth-2.28.0-py3-none-any.whl.metadata (6.4 kB)
+Collecting postgrest==2.28.0 (from supabase)
+  Downloading postgrest-2.28.0-py3-none-any.whl.metadata (3.4 kB)
+Requirement already satisfied: httpx<0.29,>=0.26 in /opt/anaconda3/lib/python3.13/site-packages (from supabase) (0.28.1)
+Collecting yarl>=1.22.0 (from supabase)
+  Downloading yarl-1.23.0-cp313-cp313-macosx_11_0_arm64.whl.metadata (79 kB)
+Collecting deprecation>=2.1.0 (from postgrest==2.28.0->supabase)
+  Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
+Requirement already satisfied: pydantic<3.0,>=1.9 in /opt/anaconda3/lib/python3.13/site-packages (from postgrest==2.28.0->supabase) (2.10.3)
+Collecting pydantic<3.0,>=1.9 (from postgrest==2.28.0->supabase)
+  Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+Collecting typing-extensions>=4.14.0 (from realtime==2.28.0->supabase)
+  Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Requirement already satisfied: websockets<16,>=11 in /opt/anaconda3/lib/python3.13/site-packages (from realtime==2.28.0->supabase) (15.0.1)
+Collecting pyiceberg>=0.10.0 (from storage3==2.28.0->supabase)
+  Downloading pyiceberg-0.11.1-cp313-cp313-macosx_11_0_arm64.whl.metadata (4.8 kB)
+Requirement already satisfied: pyjwt>=2.10.1 in /opt/anaconda3/lib/python3.13/site-packages (from pyjwt[crypto]>=2.10.1->supabase-auth==2.28.0->supabase) (2.10.1)
+Collecting strenum>=0.4.15 (from supabase-functions==2.28.0->supabase)
+  Downloading StrEnum-0.4.15-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: anyio in /opt/anaconda3/lib/python3.13/site-packages (from httpx<0.29,>=0.26->supabase) (4.12.1)
+Requirement already satisfied: certifi in /opt/anaconda3/lib/python3.13/site-packages (from httpx<0.29,>=0.26->supabase) (2025.4.26)
+Requirement already satisfied: httpcore==1.* in /opt/anaconda3/lib/python3.13/site-packages (from httpx<0.29,>=0.26->supabase) (1.0.9)
+Requirement already satisfied: idna in /opt/anaconda3/lib/python3.13/site-packages (from httpx<0.29,>=0.26->supabase) (3.7)
+Requirement already satisfied: h11>=0.16 in /opt/anaconda3/lib/python3.13/site-packages (from httpcore==1.*->httpx<0.29,>=0.26->supabase) (0.16.0)
+Collecting h2<5,>=3 (from httpx[http2]<0.29,>=0.26->postgrest==2.28.0->supabase)
+  Downloading h2-4.3.0-py3-none-any.whl.metadata (5.1 kB)
+Collecting hyperframe<7,>=6.1 (from h2<5,>=3->httpx[http2]<0.29,>=0.26->postgrest==2.28.0->supabase)
+  Downloading hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
+Collecting hpack<5,>=4.1 (from h2<5,>=3->httpx[http2]<0.29,>=0.26->postgrest==2.28.0->supabase)
+  Downloading hpack-4.1.0-py3-none-any.whl.metadata (4.6 kB)
+Requirement already satisfied: annotated-types>=0.6.0 in /opt/anaconda3/lib/python3.13/site-packages (from pydantic<3.0,>=1.9->postgrest==2.28.0->supabase) (0.6.0)
+Collecting pydantic-core==2.41.5 (from pydantic<3.0,>=1.9->postgrest==2.28.0->supabase)
+  Downloading pydantic_core-2.41.5-cp313-cp313-macosx_11_0_arm64.whl.metadata (7.3 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic<3.0,>=1.9->postgrest==2.28.0->supabase)
+  Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: packaging in /opt/anaconda3/lib/python3.13/site-packages (from deprecation>=2.1.0->postgrest==2.28.0->supabase) (24.2)
+Collecting mmh3<6.0.0,>=4.0.0 (from pyiceberg>=0.10.0->storage3==2.28.0->supabase)
+  Downloading mmh3-5.2.0-cp313-cp313-macosx_11_0_arm64.whl.metadata (14 kB)
+Requirement already satisfied: requests<3.0.0,>=2.20.0 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (2.32.3)
+Requirement already satisfied: click<9.0.0,>=7.1.1 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (8.1.8)
+Requirement already satisfied: rich<15.0.0,>=10.11.0 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (13.9.4)
+Collecting strictyaml<2.0.0,>=1.7.0 (from pyiceberg>=0.10.0->storage3==2.28.0->supabase)
+  Downloading strictyaml-1.7.3-py3-none-any.whl.metadata (11 kB)
+Requirement already satisfied: fsspec>=2023.1.0 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (2025.3.2)
+Requirement already satisfied: pyparsing<4.0.0,>=3.1.0 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (3.2.0)
+Requirement already satisfied: tenacity<10.0.0,>=8.2.3 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (9.0.0)
+Collecting pyroaring<2.0.0,>=1.0.0 (from pyiceberg>=0.10.0->storage3==2.28.0->supabase)
+  Downloading pyroaring-1.0.3-cp313-cp313-macosx_11_0_arm64.whl.metadata (10 kB)
+Requirement already satisfied: cachetools<7.0,>=5.5 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (5.5.1)
+Requirement already satisfied: zstandard<1.0.0,>=0.13.0 in /opt/anaconda3/lib/python3.13/site-packages (from pyiceberg>=0.10.0->storage3==2.28.0->supabase) (0.23.0)
+Requirement already satisfied: charset-normalizer<4,>=2 in /opt/anaconda3/lib/python3.13/site-packages (from requests<3.0.0,>=2.20.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (3.3.2)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /opt/anaconda3/lib/python3.13/site-packages (from requests<3.0.0,>=2.20.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (2.3.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /opt/anaconda3/lib/python3.13/site-packages (from rich<15.0.0,>=10.11.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (2.2.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /opt/anaconda3/lib/python3.13/site-packages (from rich<15.0.0,>=10.11.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (2.19.1)
+Requirement already satisfied: python-dateutil>=2.6.0 in /opt/anaconda3/lib/python3.13/site-packages (from strictyaml<2.0.0,>=1.7.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (2.9.0.post0)
+Requirement already satisfied: mdurl~=0.1 in /opt/anaconda3/lib/python3.13/site-packages (from markdown-it-py>=2.2.0->rich<15.0.0,>=10.11.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (0.1.0)
+Requirement already satisfied: cryptography>=3.4.0 in /opt/anaconda3/lib/python3.13/site-packages (from pyjwt[crypto]>=2.10.1->supabase-auth==2.28.0->supabase) (44.0.1)
+Requirement already satisfied: cffi>=1.12 in /opt/anaconda3/lib/python3.13/site-packages (from cryptography>=3.4.0->pyjwt[crypto]>=2.10.1->supabase-auth==2.28.0->supabase) (1.17.1)
+Requirement already satisfied: pycparser in /opt/anaconda3/lib/python3.13/site-packages (from cffi>=1.12->cryptography>=3.4.0->pyjwt[crypto]>=2.10.1->supabase-auth==2.28.0->supabase) (2.21)
+Requirement already satisfied: six>=1.5 in /opt/anaconda3/lib/python3.13/site-packages (from python-dateutil>=2.6.0->strictyaml<2.0.0,>=1.7.0->pyiceberg>=0.10.0->storage3==2.28.0->supabase) (1.17.0)
+Requirement already satisfied: multidict>=4.0 in /opt/anaconda3/lib/python3.13/site-packages (from yarl>=1.22.0->supabase) (6.1.0)
+Requirement already satisfied: propcache>=0.2.1 in /opt/anaconda3/lib/python3.13/site-packages (from yarl>=1.22.0->supabase) (0.3.1)
+Downloading supabase-2.28.0-py3-none-any.whl (16 kB)
+Downloading postgrest-2.28.0-py3-none-any.whl (22 kB)
+Downloading realtime-2.28.0-py3-none-any.whl (22 kB)
+Downloading storage3-2.28.0-py3-none-any.whl (28 kB)
+Downloading supabase_auth-2.28.0-py3-none-any.whl (48 kB)
+Downloading supabase_functions-2.28.0-py3-none-any.whl (8.8 kB)
+Downloading h2-4.3.0-py3-none-any.whl (61 kB)
+Downloading hpack-4.1.0-py3-none-any.whl (34 kB)
+Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
+Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+Downloading pydantic_core-2.41.5-cp313-cp313-macosx_11_0_arm64.whl (1.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 1.8 MB/s eta 0:00:00
+Downloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
+Downloading pyiceberg-0.11.1-cp313-cp313-macosx_11_0_arm64.whl (532 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 532.8/532.8 kB 1.2 MB/s eta 0:00:00
+Downloading mmh3-5.2.0-cp313-cp313-macosx_11_0_arm64.whl (40 kB)
+Downloading pyroaring-1.0.3-cp313-cp313-macosx_11_0_arm64.whl (313 kB)
+Downloading strictyaml-1.7.3-py3-none-any.whl (123 kB)
+Downloading StrEnum-0.4.15-py3-none-any.whl (8.9 kB)
+Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Downloading yarl-1.23.0-cp313-cp313-macosx_11_0_arm64.whl (85 kB)
+Installing collected packages: strenum, pyroaring, yarl, typing-extensions, mmh3, hyperframe, hpack, deprecation, typing-inspection, strictyaml, pydantic-core, h2, pydantic, supabase-functions, supabase-auth, realtime, pyiceberg, postgrest, storage3, supabase
+  Attempting uninstall: yarl
+    Found existing installation: yarl 1.18.0
+    Uninstalling yarl-1.18.0:
+      Successfully uninstalled yarl-1.18.0
+  Attempting uninstall: typing-extensions
+    Found existing installation: typing_extensions 4.12.2
+    Uninstalling typing_extensions-4.12.2:
+      Successfully uninstalled typing_extensions-4.12.2
+  Attempting uninstall: pydantic-core
+    Found existing installation: pydantic_core 2.27.1
+    Uninstalling pydantic_core-2.27.1:
+      Successfully uninstalled pydantic_core-2.27.1
+  Attempting uninstall: pydantic
+    Found existing installation: pydantic 2.10.3
+    Uninstalling pydantic-2.10.3:
+      Successfully uninstalled pydantic-2.10.3
+
+Successfully installed deprecation-2.1.0 h2-4.3.0 hpack-4.1.0 hyperframe-6.1.0 mmh3-5.2.0 postgrest-2.28.0 pydantic-2.12.5 pydantic-core-2.41.5 pyiceberg-0.11.1 pyroaring-1.0.3 realtime-2.28.0 storage3-2.28.0 strenum-0.4.15 strictyaml-1.7.3 supabase-2.28.0 supabase-auth-2.28.0 supabase-functions-2.28.0 typing-extensions-4.15.0 typing-inspection-0.4.2 yarl-1.23.0

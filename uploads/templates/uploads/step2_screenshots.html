@@ -11,11 +11,25 @@
     {% csrf_token %}
     <input type="hidden" name="screenshot_order" id="screenshot-order-input">
 
-    <input type="file" id="file-input" multiple accept="image/*" style="margin-bottom: 8px;">
+    <div id="drop-zone" class="drop-zone">
+        <div class="drop-zone-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+        </div>
+        <p class="drop-zone-label">Drag &amp; Drop files here</p>
+        <p class="drop-zone-or">or</p>
+        <label for="file-input" class="btn-outline" style="cursor:pointer;">Browse Files</label>
+        <p class="drop-zone-hint">PNG, JPG, WebP &bull; Multiple files supported</p>
+        <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
+    </div>
     <div id="screenshot-list" class="screenshot-list"></div>
 
     <div class="button-row">
         <a href="{% url 'uploads:step1' %}{% if flow %}?flow_id={{ flow.id }}{% endif %}" class="btn-outline">Back</a>
+        <a href="{% url 'uploads:dashboard' %}" class="btn-outline">Save &amp; exit</a>
         <button type="submit" class="btn" id="submit-btn">Next: Select Persona</button>
     </div>
 </form>
@@ -61,6 +75,35 @@ document.addEventListener("DOMContentLoaded", function () {
             uploadFile(file);
         });
         fileInput.value = "";
+    });
+
+    // ── Drag and drop ──
+    var dropZone = document.getElementById("drop-zone");
+
+    dropZone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+    });
+
+    dropZone.addEventListener("dragleave", function (e) {
+        if (!dropZone.contains(e.relatedTarget)) {
+            dropZone.classList.remove("drag-over");
+        }
+    });
+
+    dropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        var files = Array.from(e.dataTransfer.files).filter(function (f) {
+            return f.type.startsWith("image/");
+        });
+        files.forEach(function (file) { uploadFile(file); });
+    });
+
+    dropZone.addEventListener("click", function (e) {
+        if (e.target !== fileInput && !e.target.closest("label")) {
+            fileInput.click();
+        }
     });
 
     function uploadFile(file) {

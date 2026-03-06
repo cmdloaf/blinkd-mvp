@@ -7,8 +7,12 @@ from .personas import PERSONA_CHOICES
 class ProductBackgroundForm(forms.ModelForm):
     class Meta:
         model = ProductFlow
-        fields = ["product_background"]
+        fields = ["name", "product_background"]
         widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "e.g. Onboarding flow v2, Checkout redesign...",
+                "autocomplete": "off",
+            }),
             "product_background": forms.Textarea(attrs={
                 "rows": 10,
                 "placeholder": (

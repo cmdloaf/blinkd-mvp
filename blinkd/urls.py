@@ -1,13 +1,15 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.shortcuts import redirect
 from django.urls import include, path
 
+from uploads.views import landing
+
 urlpatterns = [
-    path("", lambda request: redirect("uploads:step1")),
+    path("", landing, name="home"),
     path("admin/", admin.site.urls),
     path("upload/", include("uploads.urls")),
+    path("auth/", include("accounts.urls")),
 ]
 
 if settings.DEBUG:

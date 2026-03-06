@@ -2,10 +2,22 @@
 {% block title %}Step 1 — Product Background{% endblock %}
 {% block content %}
 <h2>Describe your product</h2>
-<p>Include what your product does, its value proposition, target audience, and key use cases.</p>
+<p>Give your test a name, then describe what your product does, its value proposition, target audience, and key use cases.</p>
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Next: Upload Screenshots</button>
+    <div class="form-group">
+        <label for="{{ form.name.id_for_label }}" class="form-label">Test name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.product_background.id_for_label }}" class="form-label">Product background</label>
+        {{ form.product_background }}
+        {% if form.product_background.errors %}<p class="form-error">{{ form.product_background.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="button-row">
+        <button type="submit" name="save_exit" value="1" class="btn-outline">Save &amp; exit</button>
+        <button type="submit" class="btn">Next: Upload Screenshots</button>
+    </div>
 </form>
 {% endblock %}
