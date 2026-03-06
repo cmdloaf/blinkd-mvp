@@ -69,10 +69,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ── File selection → immediate upload ──
+    // ── File selection → compress then upload ──
     fileInput.addEventListener("change", function () {
         Array.from(this.files).forEach(function (file) {
-            uploadFile(file);
+            compressThenUpload(file);
         });
         fileInput.value = "";
     });
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var files = Array.from(e.dataTransfer.files).filter(function (f) {
             return f.type.startsWith("image/");
         });
-        files.forEach(function (file) { uploadFile(file); });
+        files.forEach(function (file) { compressThenUpload(file); });
     });
 
     dropZone.addEventListener("click", function (e) {
@@ -105,6 +105,35 @@ document.addEventListener("DOMContentLoaded", function () {
             fileInput.click();
         }
     });
+
+    // ── Compress/resize image before upload ──
+    function compressThenUpload(file) {
+        var MAX_DIM = 1600;   // max width or height in pixels
+        var QUALITY = 0.82;   // JPEG quality
+
+        var img = new Image();
+        var blobUrl = URL.createObjectURL(file);
+        img.onload = function () {
+            URL.revokeObjectURL(blobUrl);
+            var w = img.width, h = img.height;
+            if (w > MAX_DIM || h > MAX_DIM) {
+                if (w >= h) { h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+                else        { w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+            }
+            var canvas = document.createElement("canvas");
+            canvas.width = w; canvas.height = h;
+            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+            canvas.toBlob(function (blob) {
+                var compressed = new File([blob], file.name, { type: "image/jpeg" });
+                uploadFile(compressed);
+            }, "image/jpeg", QUALITY);
+        };
+        img.onerror = function () {
+            URL.revokeObjectURL(blobUrl);
+            uploadFile(file); // fall back to original if canvas fails
+        };
+        img.src = blobUrl;
+    }
 
     function uploadFile(file) {
         // Create card in uploading state
@@ -171,14 +200,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 updateLabels();
                 updateOrder();
             } else {
-                onUploadFail(card, label, progressWrap, file);
+                var errMsg = "Upload failed";
+                try { errMsg = JSON.parse(xhr.responseText).error || errMsg; } catch (e) {}
+                onUploadFail(card, label, progressWrap, file, errMsg);
             }
             updateSubmitState();
         });
 
         xhr.addEventListener("error", function () {
             uploadingCount--;
-            onUploadFail(card, label, progressWrap, file);
+            onUploadFail(card, label, progressWrap, file, "Network error");
             updateSubmitState();
         });
 
@@ -187,10 +218,10 @@ document.addEventListener("DOMContentLoaded", function () {
         xhr.send(fd);
     }
 
-    function onUploadFail(card, label, progressWrap, file) {
+    function onUploadFail(card, label, progressWrap, file, errMsg) {
         card.classList.remove("uploading");
         card.classList.add("failed");
-        label.textContent = "Upload failed";
+        label.textContent = errMsg || "Upload failed";
         progressWrap.remove();
 
         // Add remove button
@@ -209,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
         retryBtn.textContent = "Retry";
         retryBtn.addEventListener("click", function () {
             card.remove();
-            uploadFile(file);
+            compressThenUpload(file);
         });
         card.appendChild(retryBtn);
     }

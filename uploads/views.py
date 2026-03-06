@@ -183,9 +183,13 @@ def upload_screenshot_ajax(request, flow_id):
         return JsonResponse({"error": f"Maximum {_MAX_SCREENSHOTS_PER_FLOW} screenshots per flow."}, status=400)
 
     next_order = flow.screenshots.count()
-    screenshot = Screenshot.objects.create(
-        product_flow=flow, image=f, order=next_order,
-    )
+    try:
+        screenshot = Screenshot.objects.create(
+            product_flow=flow, image=f, order=next_order,
+        )
+    except Exception as exc:
+        logger.exception("Screenshot upload failed for flow %s: %s", flow_id, exc)
+        return JsonResponse({"error": str(exc)}, status=500)
     return JsonResponse({
         "id": screenshot.pk,
         "url": screenshot.image.url,
