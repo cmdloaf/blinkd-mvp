@@ -1172,7 +1172,7 @@
     width: auto;
     display: block;
   }
-  textarea {
+  textarea, input[type="text"] {
     width: 100%;
     box-sizing: border-box;
     padding: 14px 18px;
@@ -1185,7 +1185,7 @@
     line-height: 1.65;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  textarea:focus {
+  textarea:focus, input[type="text"]:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(97, 66, 192, 0.2);
