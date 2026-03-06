@@ -29,7 +29,14 @@
   <nav class="sticky top-0 z-50 border-b border-white/[0.06] bg-[#010122]/95 backdrop-blur-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-8">
 
-      <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="h-8 w-auto shrink-0">
+      <div class="flex items-center gap-4 shrink-0">
+        <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="h-8 w-auto">
+        {% if user.is_authenticated %}
+          <a href="{% url 'uploads:dashboard' %}" class="text-white/55 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">
+            Dashboard
+          </a>
+        {% endif %}
+      </div>
 
       <div class="hidden md:flex items-center gap-1">
         <a href="#solution" class="text-white/50 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">Solution</a>
@@ -37,14 +44,7 @@
       </div>
 
       <div class="flex items-center gap-3 shrink-0">
-        {% if user.is_authenticated %}
-          <a href="{% url 'uploads:dashboard' %}" class="text-white/55 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">
-            Dashboard
-          </a>
-          <a href="{% url 'uploads:step1' %}" class="bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-150">
-            New analysis
-          </a>
-        {% else %}
+        {% if not user.is_authenticated %}
           <a href="{% url 'login' %}" class="text-white/55 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">
             Sign in
           </a>
