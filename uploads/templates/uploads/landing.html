@@ -29,14 +29,7 @@
   <nav class="sticky top-0 z-50 border-b border-white/[0.06] bg-[#010122]/95 backdrop-blur-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-8">
 
-      <div class="flex items-center gap-4 shrink-0">
-        <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="h-8 w-auto">
-        {% if user.is_authenticated %}
-          <a href="{% url 'uploads:dashboard' %}" class="text-white/55 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">
-            Dashboard
-          </a>
-        {% endif %}
-      </div>
+      <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="h-8 w-auto shrink-0">
 
       <div class="hidden md:flex items-center gap-1">
         <a href="#solution" class="text-white/50 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">Solution</a>
@@ -44,7 +37,11 @@
       </div>
 
       <div class="flex items-center gap-3 shrink-0">
-        {% if not user.is_authenticated %}
+        {% if user.is_authenticated %}
+          <a href="{% url 'uploads:dashboard' %}" class="bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-150">
+            Dashboard
+          </a>
+        {% else %}
           <a href="{% url 'login' %}" class="text-white/55 hover:text-white/90 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-150">
             Sign in
           </a>
@@ -75,10 +72,16 @@
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="{% url 'waitlist' %}" class="w-full sm:w-auto bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-8 py-3.5 rounded-xl transition-colors duration-150 text-base text-center">
-            Join the waitlist
-          </a>
-          <span class="text-white/35 text-sm">Early access — invite only.</span>
+          {% if user.is_authenticated %}
+            <a href="{% url 'uploads:dashboard' %}" class="w-full sm:w-auto bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-8 py-3.5 rounded-xl transition-colors duration-150 text-base text-center">
+              Go to Dashboard
+            </a>
+          {% else %}
+            <a href="{% url 'waitlist' %}" class="w-full sm:w-auto bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-8 py-3.5 rounded-xl transition-colors duration-150 text-base text-center">
+              Join the waitlist
+            </a>
+            <span class="text-white/35 text-sm">Early access — invite only.</span>
+          {% endif %}
         </div>
       </div>
 
@@ -300,9 +303,15 @@
           Request early access. We're onboarding founders one by one during the beta — get in before it opens.
         </p>
 
-        <a href="{% url 'waitlist' %}" class="inline-block bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-10 py-4 rounded-xl transition-colors duration-150 text-base">
-          Join the waitlist
-        </a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'uploads:dashboard' %}" class="inline-block bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-10 py-4 rounded-xl transition-colors duration-150 text-base">
+            Dashboard
+          </a>
+        {% else %}
+          <a href="{% url 'waitlist' %}" class="inline-block bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-10 py-4 rounded-xl transition-colors duration-150 text-base">
+            Join the waitlist
+          </a>
+        {% endif %}
 
         <p class="text-white/25 text-sm mt-4">Invite only. Free during beta.</p>
 
