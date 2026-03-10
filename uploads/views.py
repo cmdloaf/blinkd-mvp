@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 
@@ -194,6 +195,7 @@ def upload_screenshot_ajax(request, flow_id):
         "id": screenshot.pk,
         "url": screenshot.image.url,
         "order": screenshot.order,
+        "name": screenshot.name,
     })
 
 
@@ -216,6 +218,42 @@ def delete_screenshot(request, flow_id, screenshot_id):
     if next_url == "confirm":
         return redirect("uploads:confirm", flow_id=flow.id)
     return redirect("uploads:step2", flow_id=flow.id)
+
+
+@login_required
+@require_POST
+def reorder_screenshots(request, flow_id):
+    """Accept JSON [{id, order}, ...] and update Screenshot.order fields."""
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
+    try:
+        items = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    if not isinstance(items, list):
+        return JsonResponse({"error": "Expected a list"}, status=400)
+    for item in items:
+        sid = item.get("id")
+        new_order = item.get("order")
+        if sid is None or new_order is None:
+            continue
+        flow.screenshots.filter(pk=sid).update(order=new_order)
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
+def rename_screenshot(request, flow_id, screenshot_id):
+    """Accept JSON {name: str} and update Screenshot.name."""
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
+    screenshot = get_object_or_404(Screenshot, pk=screenshot_id, product_flow=flow)
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    name = str(data.get("name", ""))[:200]
+    screenshot.name = name
+    screenshot.save(update_fields=["name"])
+    return JsonResponse({"ok": True})
 
 
 @login_required

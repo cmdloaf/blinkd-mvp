@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
 <h2>Upload &amp; order your flow screenshots</h2>
-<p>Please upload your screenshots in order of the flow you want to test. Click &times; to remove.</p>
+<p>Upload screenshots of each step in your product flow, then drag rows to set the order.</p>
 
 <form method="post" id="screenshot-form">
     {% csrf_token %}
@@ -25,7 +25,56 @@
         <p class="drop-zone-hint">PNG, JPG, WebP &bull; Multiple files supported</p>
         <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
     </div>
-    <div id="screenshot-list" class="screenshot-list"></div>
+
+    <div id="screenshot-table-wrapper">
+        <table class="screenshot-table" id="screenshot-table">
+            <thead>
+                <tr>
+                    <th class="col-order">#</th>
+                    <th class="col-thumb">Preview</th>
+                    <th class="col-name">Screenshot Name</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="screenshot-tbody">
+                {% for s in existing %}
+                <tr class="screenshot-row" data-id="{{ s.pk }}" data-delete-url="{% url 'uploads:delete_screenshot' flow_id=flow.id screenshot_id=s.pk %}" data-rename-url="{% url 'uploads:rename_screenshot' flow_id=flow.id screenshot_id=s.pk %}">
+                    <td class="col-order screenshot-order-cell">{{ forloop.counter }}</td>
+                    <td class="col-thumb">
+                        <img src="{{ s.image.url }}" class="screenshot-thumb" alt="Step {{ forloop.counter }}">
+                    </td>
+                    <td class="col-name">
+                        <div class="name-edit-wrapper">
+                            <span class="name-display">{% if s.name %}{{ s.name }}{% else %}Step {{ forloop.counter }}{% endif %}</span>
+                            <span class="edit-pen-icon" aria-hidden="true">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </span>
+                            <input type="text" class="screenshot-name-input" value="{{ s.name }}" placeholder="Step {{ forloop.counter }}">
+                        </div>
+                    </td>
+                    <td class="col-actions">
+                        <div class="screenshot-actions">
+                            <button type="button" class="remove-btn row-remove-btn" title="Remove">&times;</button>
+                            <button type="button" class="drag-handle" title="Drag to reorder">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <rect x="3" y="3" width="10" height="2" rx="1"/>
+                                    <rect x="3" y="7" width="10" height="2" rx="1"/>
+                                    <rect x="3" y="11" width="10" height="2" rx="1"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div id="empty-state" class="screenshot-empty-state" style="display:{% if existing %}none{% else %}flex{% endif %}">
+            <p>No screenshots yet. Upload files above to get started.</p>
+        </div>
+    </div>
 
     <div class="button-row">
         <a href="{% url 'uploads:step1' %}{% if flow %}?flow_id={{ flow.id }}{% endif %}" class="btn-outline">Back</a>
@@ -39,33 +88,28 @@
 document.addEventListener("DOMContentLoaded", function () {
     var form = document.getElementById("screenshot-form");
     var fileInput = document.getElementById("file-input");
-    var list = document.getElementById("screenshot-list");
+    var tbody = document.getElementById("screenshot-tbody");
     var orderInput = document.getElementById("screenshot-order-input");
     var submitBtn = document.getElementById("submit-btn");
+    var emptyState = document.getElementById("empty-state");
     var csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
     var uploadUrl = "{% url 'uploads:upload_screenshot' flow_id=flow.id %}";
+    var reorderUrl = "{% url 'uploads:reorder_screenshots' flow_id=flow.id %}";
     var deleteBaseUrl = "{% url 'uploads:step2' flow_id=flow.id %}delete/";
+    var renameBaseUrl = "{% url 'uploads:step2' flow_id=flow.id %}rename/";
     var uploadingCount = 0;
 
-    // ── Render existing screenshots from DB ──
-    {% for s in existing %}
-    addCard({
-        id: "{{ s.pk }}",
-        url: "{{ s.image.url }}",
-        deleteUrl: "{% url 'uploads:delete_screenshot' flow_id=flow.id screenshot_id=s.pk %}"
-    });
-    {% endfor %}
+    updateOrderInput();
 
-    updateOrder();
-    updateLabels();
-
-    // ── Sortable (filter out uploading items) ──
-    new Sortable(list, {
+    // ── Sortable — drag rows by handle ──
+    new Sortable(tbody, {
         animation: 150,
+        handle: ".drag-handle",
         filter: ".uploading",
         onEnd: function () {
-            updateLabels();
-            updateOrder();
+            updateOrderNumbers();
+            updateOrderInput();
+            saveOrderToServer();
         }
     });
 
@@ -77,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fileInput.value = "";
     });
 
-    // ── Drag and drop ──
+    // ── Drag-and-drop onto drop zone ──
     var dropZone = document.getElementById("drop-zone");
 
     dropZone.addEventListener("dragover", function (e) {
@@ -108,8 +152,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Compress/resize image before upload ──
     function compressThenUpload(file) {
-        var MAX_DIM = 1600;   // max width or height in pixels
-        var QUALITY = 0.82;   // JPEG quality
+        var MAX_DIM = 1600;
+        var QUALITY = 0.82;
 
         var img = new Image();
         var blobUrl = URL.createObjectURL(file);
@@ -130,162 +174,239 @@ document.addEventListener("DOMContentLoaded", function () {
         };
         img.onerror = function () {
             URL.revokeObjectURL(blobUrl);
-            uploadFile(file); // fall back to original if canvas fails
+            uploadFile(file);
         };
         img.src = blobUrl;
     }
 
     function uploadFile(file) {
-        // Create card in uploading state
-        var card = document.createElement("div");
-        card.className = "screenshot-item uploading";
+        var tempThumbUrl = URL.createObjectURL(file);
+        var row = addRow({
+            id: null,
+            url: tempThumbUrl,
+            name: "",
+            deleteUrl: null,
+            renameUrl: null,
+            uploading: true,
+            file: file
+        });
 
-        var img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        card.appendChild(img);
-
-        var label = document.createElement("small");
-        label.textContent = "Uploading\u2026";
-        card.appendChild(label);
-
-        var progressWrap = document.createElement("div");
-        progressWrap.className = "upload-progress";
-        var progressBar = document.createElement("div");
-        progressBar.className = "upload-progress-bar";
-        progressWrap.appendChild(progressBar);
-        card.appendChild(progressWrap);
-
-        list.appendChild(card);
         uploadingCount++;
         updateSubmitState();
 
-        // Upload via XHR for progress events
         var xhr = new XMLHttpRequest();
         xhr.open("POST", uploadUrl);
         xhr.setRequestHeader("X-CSRFToken", csrfToken);
 
-        xhr.upload.addEventListener("progress", function (e) {
-            if (e.lengthComputable) {
-                var pct = Math.round((e.loaded / e.total) * 100);
-                progressBar.style.width = pct + "%";
-            }
-        });
-
         xhr.addEventListener("load", function () {
             uploadingCount--;
+            URL.revokeObjectURL(tempThumbUrl);
+
             if (xhr.status === 200) {
                 var data = JSON.parse(xhr.responseText);
-                card.classList.remove("uploading");
-                card.setAttribute("data-id", data.id);
-                card.setAttribute("data-delete-url", deleteBaseUrl + data.id + "/");
+                row.classList.remove("uploading");
+                row.setAttribute("data-id", data.id);
+                row.setAttribute("data-delete-url", deleteBaseUrl + data.id + "/");
+                row.setAttribute("data-rename-url", renameBaseUrl + data.id + "/");
 
-                // Replace blob URL with server URL
-                var blobUrl = img.src;
-                img.src = data.url;
-                URL.revokeObjectURL(blobUrl);
+                // Update thumbnail with server URL
+                row.querySelector(".screenshot-thumb").src = data.url;
 
-                // Add remove button
-                var removeBtn = document.createElement("button");
-                removeBtn.type = "button";
-                removeBtn.className = "remove-btn";
-                removeBtn.title = "Remove";
-                removeBtn.innerHTML = "&times;";
-                card.insertBefore(removeBtn, card.firstChild);
+                // Enable drag handle and delete button
+                row.querySelector(".drag-handle").removeAttribute("disabled");
+                row.querySelector(".row-remove-btn").removeAttribute("disabled");
 
-                // Progress complete
-                progressBar.classList.add("complete");
-                progressBar.style.width = "100%";
-                setTimeout(function () { progressWrap.remove(); }, 600);
+                // Enable name editing
+                var nameInput = row.querySelector(".screenshot-name-input");
+                if (nameInput) nameInput.disabled = false;
 
-                updateLabels();
-                updateOrder();
+                // Remove progress indicator
+                var prog = row.querySelector(".upload-progress");
+                if (prog) prog.remove();
+
+                updateOrderNumbers();
+                updateOrderInput();
             } else {
                 var errMsg = "Upload failed";
                 try { errMsg = JSON.parse(xhr.responseText).error || errMsg; } catch (e) {}
-                onUploadFail(card, label, progressWrap, file, errMsg);
+                onUploadFail(row, file, errMsg);
             }
             updateSubmitState();
+            updateEmptyState();
         });
 
         xhr.addEventListener("error", function () {
             uploadingCount--;
-            onUploadFail(card, label, progressWrap, file, "Network error");
+            URL.revokeObjectURL(tempThumbUrl);
+            onUploadFail(row, file, "Network error");
             updateSubmitState();
         });
+
+        // Progress bar in the name cell
+        var progressBar = row.querySelector(".upload-progress-bar");
+        if (progressBar) {
+            xhr.upload.addEventListener("progress", function (e) {
+                if (e.lengthComputable) {
+                    progressBar.style.width = Math.round((e.loaded / e.total) * 100) + "%";
+                }
+            });
+        }
 
         var fd = new FormData();
         fd.append("file", file);
         xhr.send(fd);
     }
 
-    function onUploadFail(card, label, progressWrap, file, errMsg) {
-        card.classList.remove("uploading");
-        card.classList.add("failed");
-        label.textContent = errMsg || "Upload failed";
-        progressWrap.remove();
+    function onUploadFail(row, file, errMsg) {
+        row.classList.remove("uploading");
+        row.classList.add("failed");
+        var nameDisplay = row.querySelector(".name-display");
+        if (nameDisplay) nameDisplay.textContent = errMsg;
+        var prog = row.querySelector(".upload-progress");
+        if (prog) prog.remove();
 
-        // Add remove button
-        var removeBtn = document.createElement("button");
-        removeBtn.type = "button";
-        removeBtn.className = "remove-btn";
-        removeBtn.title = "Remove";
-        removeBtn.innerHTML = "&times;";
-        removeBtn.addEventListener("click", function () { card.remove(); updateLabels(); updateOrder(); });
-        card.insertBefore(removeBtn, card.firstChild);
-
-        // Add retry button
         var retryBtn = document.createElement("button");
         retryBtn.type = "button";
         retryBtn.className = "retry-btn";
         retryBtn.textContent = "Retry";
         retryBtn.addEventListener("click", function () {
-            card.remove();
+            row.remove();
+            updateOrderNumbers();
+            updateOrderInput();
+            updateEmptyState();
             compressThenUpload(file);
         });
-        card.appendChild(retryBtn);
+        var actionsCell = row.querySelector(".screenshot-actions");
+        if (actionsCell) actionsCell.appendChild(retryBtn);
     }
 
-    // ── Add a card for an already-uploaded screenshot ──
-    function addCard(opts) {
-        var card = document.createElement("div");
-        card.className = "screenshot-item";
-        card.setAttribute("data-id", opts.id);
-        card.setAttribute("data-delete-url", opts.deleteUrl);
+    // ── Add a table row ──
+    function addRow(opts) {
+        var row = document.createElement("tr");
+        row.className = "screenshot-row" + (opts.uploading ? " uploading" : "");
+        if (opts.id) row.setAttribute("data-id", opts.id);
+        if (opts.deleteUrl) row.setAttribute("data-delete-url", opts.deleteUrl);
+        if (opts.renameUrl) row.setAttribute("data-rename-url", opts.renameUrl);
+
+        var orderNum = tbody.querySelectorAll(".screenshot-row:not(.uploading):not(.failed)").length + 1;
+        var displayName = opts.name || ("Step " + orderNum);
+
+        // Order cell
+        var tdOrder = document.createElement("td");
+        tdOrder.className = "col-order screenshot-order-cell";
+        tdOrder.textContent = opts.uploading ? "—" : orderNum;
+        row.appendChild(tdOrder);
+
+        // Thumbnail cell
+        var tdThumb = document.createElement("td");
+        tdThumb.className = "col-thumb";
+        var img = document.createElement("img");
+        img.src = opts.url;
+        img.className = "screenshot-thumb";
+        img.alt = "Screenshot";
+        tdThumb.appendChild(img);
+        row.appendChild(tdThumb);
+
+        // Name cell
+        var tdName = document.createElement("td");
+        tdName.className = "col-name";
+        var nameWrapper = document.createElement("div");
+        nameWrapper.className = "name-edit-wrapper";
+
+        var nameDisplay = document.createElement("span");
+        nameDisplay.className = "name-display";
+        nameDisplay.textContent = opts.uploading ? "Uploading\u2026" : displayName;
+        nameWrapper.appendChild(nameDisplay);
+
+        var penIcon = document.createElement("span");
+        penIcon.className = "edit-pen-icon";
+        penIcon.setAttribute("aria-hidden", "true");
+        penIcon.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+        nameWrapper.appendChild(penIcon);
+
+        var nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.className = "screenshot-name-input";
+        nameInput.value = opts.name || "";
+        nameInput.placeholder = "Step " + orderNum;
+        nameInput.disabled = !!opts.uploading;
+        nameWrapper.appendChild(nameInput);
+
+        tdName.appendChild(nameWrapper);
+
+        if (opts.uploading) {
+            var progressWrap = document.createElement("div");
+            progressWrap.className = "upload-progress";
+            var progressBar = document.createElement("div");
+            progressBar.className = "upload-progress-bar";
+            progressWrap.appendChild(progressBar);
+            tdName.appendChild(progressWrap);
+        }
+        row.appendChild(tdName);
+
+        // Actions cell
+        var tdActions = document.createElement("td");
+        tdActions.className = "col-actions";
+        var actionsDiv = document.createElement("div");
+        actionsDiv.className = "screenshot-actions";
 
         var removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.className = "remove-btn";
+        removeBtn.className = "remove-btn row-remove-btn";
         removeBtn.title = "Remove";
         removeBtn.innerHTML = "&times;";
+        if (opts.uploading) removeBtn.disabled = true;
+        actionsDiv.appendChild(removeBtn);
 
-        var img = document.createElement("img");
-        img.src = opts.url;
+        var dragBtn = document.createElement("button");
+        dragBtn.type = "button";
+        dragBtn.className = "drag-handle";
+        dragBtn.title = "Drag to reorder";
+        dragBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="2" rx="1"/><rect x="3" y="7" width="10" height="2" rx="1"/><rect x="3" y="11" width="10" height="2" rx="1"/></svg>';
+        if (opts.uploading) dragBtn.disabled = true;
+        actionsDiv.appendChild(dragBtn);
 
-        var label = document.createElement("small");
-        label.textContent = "Step";
+        tdActions.appendChild(actionsDiv);
+        row.appendChild(tdActions);
 
-        card.appendChild(removeBtn);
-        card.appendChild(img);
-        card.appendChild(label);
-        list.appendChild(card);
+        tbody.appendChild(row);
+        updateEmptyState();
+        return row;
     }
 
-    // ── Delete uploaded screenshot ──
-    list.addEventListener("click", function (e) {
-        var btn = e.target.closest(".remove-btn");
+    // ── Enter edit mode on pen/display click ──
+    tbody.addEventListener("click", function (e) {
+        // Delete button is handled separately below — don't intercept it here
+        if (e.target.closest(".row-remove-btn") || e.target.closest(".drag-handle")) return;
+
+        var target = e.target.closest(".edit-pen-icon, .name-display");
+        if (!target) return;
+        var wrapper = target.closest(".name-edit-wrapper");
+        if (!wrapper) return;
+        var row = wrapper.closest(".screenshot-row");
+        if (!row || !row.getAttribute("data-id")) return; // no-op while uploading
+
+        wrapper.classList.add("editing");
+        var input = wrapper.querySelector(".screenshot-name-input");
+        if (input) { input.focus(); input.select(); }
+    });
+
+    // ── Delete row ──
+    tbody.addEventListener("click", function (e) {
+        var btn = e.target.closest(".row-remove-btn");
         if (!btn) return;
         e.preventDefault();
-        var card = btn.closest(".screenshot-item");
+        var row = btn.closest(".screenshot-row");
 
-        // Failed cards (no data-id) just remove from DOM
-        if (!card.getAttribute("data-id")) {
-            card.remove();
-            updateLabels();
-            updateOrder();
+        if (!row.getAttribute("data-id")) {
+            row.remove();
+            updateOrderNumbers();
+            updateOrderInput();
+            updateEmptyState();
             return;
         }
 
-        var deleteUrl = card.getAttribute("data-delete-url");
+        var deleteUrl = row.getAttribute("data-delete-url");
         btn.disabled = true;
 
         fetch(deleteUrl, {
@@ -294,29 +415,84 @@ document.addEventListener("DOMContentLoaded", function () {
             body: "next=stay",
             redirect: "manual",
         }).then(function () {
-            card.remove();
-            updateLabels();
-            updateOrder();
+            row.remove();
+            updateOrderNumbers();
+            updateOrderInput();
+            updateEmptyState();
         });
     });
 
-    // ── Helpers ──
-    function updateLabels() {
-        var cards = list.querySelectorAll(".screenshot-item:not(.uploading):not(.failed)");
-        cards.forEach(function (card, idx) {
-            var label = card.querySelector("small");
-            if (label) label.textContent = "Step " + (idx + 1);
+    // ── Exit edit mode on focusout — save + update display ──
+    tbody.addEventListener("focusout", function (e) {
+        var input = e.target.closest(".screenshot-name-input");
+        if (!input) return;
+        var wrapper = input.closest(".name-edit-wrapper");
+        var row = input.closest(".screenshot-row");
+        var renameUrl = row && row.getAttribute("data-rename-url");
+
+        // Determine display text: custom name or "Step N" fallback
+        var idx = Array.from(tbody.querySelectorAll(".screenshot-row:not(.uploading):not(.failed)")).indexOf(row);
+        var fallback = "Step " + (idx + 1);
+        var displayText = input.value.trim() || fallback;
+
+        // Update display span and exit edit mode
+        var nameDisplay = wrapper && wrapper.querySelector(".name-display");
+        if (nameDisplay) nameDisplay.textContent = displayText;
+        if (wrapper) wrapper.classList.remove("editing");
+
+        // Save to server
+        if (renameUrl) {
+            fetch(renameUrl, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrfToken, "Content-Type": "application/json" },
+                body: JSON.stringify({ name: input.value }),
+            });
+        }
+    });
+
+    // ── Save reorder to server ──
+    function saveOrderToServer() {
+        var rows = tbody.querySelectorAll(".screenshot-row[data-id]");
+        var payload = Array.from(rows).map(function (row, idx) {
+            return { id: parseInt(row.getAttribute("data-id"), 10), order: idx };
+        });
+        fetch(reorderUrl, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrfToken, "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
         });
     }
 
-    function updateOrder() {
-        var cards = list.querySelectorAll(".screenshot-item[data-id]");
-        var ids = Array.from(cards).map(function (c) { return c.getAttribute("data-id"); });
+    // ── Helpers ──
+    function updateOrderNumbers() {
+        var rows = tbody.querySelectorAll(".screenshot-row:not(.uploading):not(.failed)");
+        rows.forEach(function (row, idx) {
+            var cell = row.querySelector(".screenshot-order-cell");
+            if (cell) cell.textContent = idx + 1;
+            var nameInput = row.querySelector(".screenshot-name-input");
+            var nameDisplay = row.querySelector(".name-display");
+            var stepLabel = "Step " + (idx + 1);
+            if (nameInput) nameInput.placeholder = stepLabel;
+            // Update display text only if no custom name saved
+            if (nameDisplay && nameInput && !nameInput.value.trim()) {
+                nameDisplay.textContent = stepLabel;
+            }
+        });
+    }
+
+    function updateOrderInput() {
+        var rows = tbody.querySelectorAll(".screenshot-row[data-id]");
+        var ids = Array.from(rows).map(function (r) { return r.getAttribute("data-id"); });
         orderInput.value = ids.join(",");
     }
 
     function updateSubmitState() {
         submitBtn.disabled = uploadingCount > 0;
+    }
+
+    function updateEmptyState() {
+        var hasRows = tbody.querySelectorAll(".screenshot-row").length > 0;
+        emptyState.style.display = hasRows ? "none" : "flex";
     }
 
     // ── Form submit ──
@@ -325,7 +501,7 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
             return;
         }
-        updateOrder();
+        updateOrderInput();
     });
 });
 </script>

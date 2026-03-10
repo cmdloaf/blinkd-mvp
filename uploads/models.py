@@ -72,6 +72,7 @@ class Screenshot(models.Model):
         ProductFlow, on_delete=models.CASCADE, related_name="screenshots"
     )
     image = models.ImageField(upload_to="screenshots/%Y/%m/%d/")
+    name = models.CharField(max_length=200, blank=True, default="")
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
