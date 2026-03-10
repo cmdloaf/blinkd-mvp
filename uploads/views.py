@@ -209,6 +209,15 @@ def _reindex_screenshots(flow):
 
 @login_required
 @require_POST
+def delete_flow(request, flow_id):
+    """Delete an entire product flow and all associated data."""
+    flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)
+    flow.delete()
+    return redirect("uploads:dashboard")
+
+
+@login_required
+@require_POST
 def delete_screenshot(request, flow_id, screenshot_id):
     """Delete a single screenshot and re-index the remaining ones."""
     flow = get_object_or_404(ProductFlow, id=flow_id, user=request.user)

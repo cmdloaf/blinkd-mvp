@@ -6,6 +6,7 @@ app_name = "uploads"
 
 urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("delete/<uuid:flow_id>/", views.delete_flow, name="delete_flow"),
     path("step1/", views.step1_background, name="step1"),
     path("step2/<uuid:flow_id>/", views.step2_screenshots, name="step2"),
     path("step2/<uuid:flow_id>/upload/", views.upload_screenshot_ajax, name="upload_screenshot"),
