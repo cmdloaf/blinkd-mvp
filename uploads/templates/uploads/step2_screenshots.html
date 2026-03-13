@@ -2,6 +2,75 @@
 {% block title %}Step 2 — Screenshots{% endblock %}
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<style>
+#lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+#lightbox-overlay.active { display: flex; }
+#lightbox-img {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    display: block;
+}
+#lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 28px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    transition: color 0.15s;
+}
+#lightbox-close:hover { color: #fff; }
+#lightbox-prev,
+#lightbox-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    line-height: 1;
+}
+#lightbox-prev { left: 20px; }
+#lightbox-next { right: 20px; }
+#lightbox-prev:hover,
+#lightbox-next:hover {
+    background: rgba(97, 66, 192, 0.5);
+    color: #fff;
+    border-color: rgba(97, 66, 192, 0.6);
+}
+#lightbox-overlay.single #lightbox-prev,
+#lightbox-overlay.single #lightbox-next { display: none; }
+#lightbox-counter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    font-family: system-ui, sans-serif;
+}
+.screenshot-thumb { cursor: pointer; }
+</style>
 {% endblock %}
 {% block content %}
 <h2>Upload &amp; order your flow screenshots</h2>
@@ -41,7 +110,7 @@
                 <tr class="screenshot-row" data-id="{{ s.pk }}" data-delete-url="{% url 'uploads:delete_screenshot' flow_id=flow.id screenshot_id=s.pk %}" data-rename-url="{% url 'uploads:rename_screenshot' flow_id=flow.id screenshot_id=s.pk %}">
                     <td class="col-order screenshot-order-cell">{{ forloop.counter }}</td>
                     <td class="col-thumb">
-                        <img src="{{ s.image.url }}" class="screenshot-thumb" alt="Step {{ forloop.counter }}">
+                        <img src="{{ s.image.url }}" class="screenshot-thumb" alt="Step {{ forloop.counter }}" data-lb="1" onclick="openLightbox(this.src)">
                     </td>
                     <td class="col-name">
                         <div class="name-edit-wrapper">
@@ -82,6 +151,15 @@
         <button type="submit" class="btn" id="submit-btn">Next: Select Persona</button>
     </div>
 </form>
+
+<div id="lightbox-overlay" aria-modal="true" role="dialog" aria-label="Screenshot preview">
+    <button id="lightbox-close" aria-label="Close">&times;</button>
+    <button id="lightbox-prev" aria-label="Previous">&#8249;</button>
+    <img id="lightbox-img" src="" alt="Screenshot preview">
+    <button id="lightbox-next" aria-label="Next">&#8250;</button>
+    <div id="lightbox-counter"></div>
+</div>
+
 {% endblock %}
 {% block extra_js %}
 <script>
@@ -209,8 +287,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 row.setAttribute("data-delete-url", deleteBaseUrl + data.id + "/");
                 row.setAttribute("data-rename-url", renameBaseUrl + data.id + "/");
 
-                // Update thumbnail with server URL
-                row.querySelector(".screenshot-thumb").src = data.url;
+                // Update thumbnail with server URL and enable lightbox
+                var thumb = row.querySelector(".screenshot-thumb");
+                thumb.src = data.url;
+                thumb.setAttribute("data-lb", "1");
+                thumb.addEventListener("click", function () { openLightbox(thumb.src); });
 
                 // Enable drag handle and delete button
                 row.querySelector(".drag-handle").removeAttribute("disabled");
@@ -502,6 +583,60 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         updateOrderInput();
+    });
+
+    // ── Lightbox ──
+    var lbIndex = 0;
+
+    function getLightboxImages() {
+        return Array.from(document.querySelectorAll("#screenshot-tbody img[data-lb]"));
+    }
+
+    window.openLightbox = function (src) {
+        var imgs = getLightboxImages();
+        lbIndex = imgs.findIndex(function (img) { return img.src === src; });
+        if (lbIndex < 0) lbIndex = 0;
+        showLightbox(imgs);
+    };
+
+    function showLightbox(imgs) {
+        var overlay = document.getElementById("lightbox-overlay");
+        var lbImg = document.getElementById("lightbox-img");
+        var counter = document.getElementById("lightbox-counter");
+        lbImg.src = imgs[lbIndex].src;
+        counter.textContent = imgs.length > 1 ? (lbIndex + 1) + " / " + imgs.length : "";
+        overlay.classList.toggle("single", imgs.length === 1);
+        overlay.classList.add("active");
+    }
+
+    function closeLightbox() {
+        document.getElementById("lightbox-overlay").classList.remove("active");
+    }
+
+    document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
+
+    document.getElementById("lightbox-overlay").addEventListener("click", function (e) {
+        if (e.target === document.getElementById("lightbox-overlay")) closeLightbox();
+    });
+
+    document.getElementById("lightbox-prev").addEventListener("click", function () {
+        var imgs = getLightboxImages();
+        lbIndex = (lbIndex - 1 + imgs.length) % imgs.length;
+        showLightbox(imgs);
+    });
+
+    document.getElementById("lightbox-next").addEventListener("click", function () {
+        var imgs = getLightboxImages();
+        lbIndex = (lbIndex + 1) % imgs.length;
+        showLightbox(imgs);
+    });
+
+    document.addEventListener("keydown", function (e) {
+        var overlay = document.getElementById("lightbox-overlay");
+        if (!overlay.classList.contains("active")) return;
+        if (e.key === "Escape") closeLightbox();
+        if (e.key === "ArrowRight") document.getElementById("lightbox-next").click();
+        if (e.key === "ArrowLeft") document.getElementById("lightbox-prev").click();
     });
 });
 </script>
