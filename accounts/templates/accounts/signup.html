@@ -34,6 +34,12 @@
   </script>
   <style>
     body { font-family: 'Alexandria', sans-serif; }
+    .heading-gradient {
+      background: linear-gradient(to right, #ffffff, #6142C0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
     input:-webkit-autofill,
     input:-webkit-autofill:focus {
       -webkit-box-shadow: 0 0 0 1000px #0C0C30 inset !important;
@@ -60,8 +66,11 @@
 
       <!-- Header -->
       <div class="text-center mb-10">
-        <h1 class="text-3xl font-bold text-white/92 tracking-tight mb-2">Create your account</h1>
-        <p class="text-white/45 text-sm">Start simulating your user flows today</p>
+        <div class="flex justify-center mb-5">
+          <img src="{% static 'uploads/images/FINAL_Logo.png' %}" alt="blinkd" class="h-12 w-auto">
+        </div>
+        <h1 class="text-3xl font-bold heading-gradient tracking-tight mb-2">Create your account</h1>
+        <p class="text-white/50 text-sm">Start simulating your user flows today</p>
       </div>
 
       <!-- Card -->
@@ -168,7 +177,7 @@
       </div>
 
       <!-- Footer link -->
-      <p class="text-center text-white/35 text-sm mt-6">
+      <p class="text-center text-white/40 text-sm mt-6">
         Already have an account?
         <a href="{% url 'login' %}" class="text-[#6142C0] hover:text-white/90 font-medium transition-colors duration-150 ml-1">Sign in</a>
       </p>

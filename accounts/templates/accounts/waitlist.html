@@ -34,6 +34,12 @@
   </script>
   <style>
     body { font-family: 'Alexandria', sans-serif; }
+    .heading-gradient {
+      background: linear-gradient(to right, #ffffff, #6142C0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
     input:-webkit-autofill,
     input:-webkit-autofill:focus {
       -webkit-box-shadow: 0 0 0 1000px #0C0C30 inset !important;
@@ -66,8 +72,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-white/92 tracking-tight mb-3">You're on the list</h1>
-        <p class="text-white/45 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
+        <h1 class="text-3xl font-bold text-white tracking-tight mb-3">You're on the list</h1>
+        <p class="text-white/50 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
           We'll email you as soon as your access is approved. We're onboarding founders one by one during the beta.
         </p>
         <a href="/" class="text-[#6142C0] hover:text-white/90 text-sm font-medium transition-colors duration-150">
@@ -83,8 +89,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-white/92 tracking-tight mb-3">You're approved</h1>
-        <p class="text-white/45 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
+        <h1 class="text-3xl font-bold text-white tracking-tight mb-3">You're approved</h1>
+        <p class="text-white/50 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
           Your email is already on the access list. Go ahead and create your account.
         </p>
         <a href="{% url 'signup' %}" class="inline-block bg-[#6142C0] hover:bg-[#4E198C] text-white font-semibold px-8 py-3 rounded-xl transition-colors duration-150 text-sm">
@@ -95,8 +101,11 @@
       {% else %}
       <!-- Form state -->
       <div class="text-center mb-10">
-        <h1 class="text-3xl font-bold text-white/92 tracking-tight mb-2">Join the waitlist</h1>
-        <p class="text-white/45 text-sm">Early access — invite only. We're onboarding founders one by one.</p>
+        <div class="flex justify-center mb-5">
+          <img src="{% static 'uploads/images/FINAL_Logo.png' %}" alt="blinkd" class="h-12 w-auto">
+        </div>
+        <h1 class="text-3xl font-bold heading-gradient tracking-tight mb-2">Join the waitlist</h1>
+        <p class="text-white/50 text-sm">Early access — invite only. We're onboarding founders one by one.</p>
       </div>
 
       <div class="bg-[#0C0C30] rounded-2xl border border-white/[0.07] p-8">
@@ -153,7 +162,7 @@
 
       </div>
 
-      <p class="text-center text-white/35 text-sm mt-6">
+      <p class="text-center text-white/40 text-sm mt-6">
         Already have an account?
         <a href="{% url 'login' %}" class="text-[#6142C0] hover:text-white/90 font-medium transition-colors duration-150 ml-1">Sign in</a>
       </p>
