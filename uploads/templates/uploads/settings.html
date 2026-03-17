@@ -1,0 +1,168 @@
+{% extends "uploads/dashboard_base.html" %}
+{% block title %}User Settings{% endblock %}
+
+{% block content %}
+<main class="max-w-2xl mx-auto px-6 py-12">
+
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-white tracking-tight">User Settings</h1>
+    <p class="text-white/40 text-sm mt-1">Manage your profile and account settings.</p>
+  </div>
+
+  <!-- Success / error messages -->
+  {% if profile_success %}
+  <div class="mb-6 flex items-center gap-3 bg-[#10B981]/10 border border-[#10B981]/25 text-[#34D399] text-sm font-medium px-4 py-3 rounded-xl">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    Profile updated successfully.
+  </div>
+  {% endif %}
+  {% if password_success %}
+  <div class="mb-6 flex items-center gap-3 bg-[#10B981]/10 border border-[#10B981]/25 text-[#34D399] text-sm font-medium px-4 py-3 rounded-xl">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    Password updated successfully.
+  </div>
+  {% endif %}
+  {% if profile_error %}
+  <div class="mb-6 flex items-center gap-3 bg-[#DC3545]/10 border border-[#DC3545]/25 text-[#F87171] text-sm font-medium px-4 py-3 rounded-xl">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    {{ profile_error }}
+  </div>
+  {% endif %}
+  {% if password_error %}
+  <div class="mb-6 flex items-center gap-3 bg-[#DC3545]/10 border border-[#DC3545]/25 text-[#F87171] text-sm font-medium px-4 py-3 rounded-xl">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    {{ password_error }}
+  </div>
+  {% endif %}
+
+  <!-- Profile section -->
+  <div class="bg-[#0C0C30] border border-white/[0.07] rounded-2xl p-6 mb-6">
+    <h2 class="text-base font-semibold text-white mb-6">Profile</h2>
+
+    <form method="post" enctype="multipart/form-data" action="?action=profile">
+      {% csrf_token %}
+
+      <!-- Avatar -->
+      <div class="flex items-center gap-5 mb-6">
+        <div id="avatar-preview" class="w-16 h-16 rounded-full bg-[#6142C0]/30 border border-[#6142C0]/40 flex items-center justify-center overflow-hidden text-white text-xl font-semibold flex-shrink-0">
+          {% if user_profile and user_profile.profile_picture %}
+            <img id="avatar-img" src="{{ user_profile.profile_picture.url }}" alt="" class="w-full h-full object-cover">
+          {% else %}
+            <span id="avatar-initials">{{ avatar_initials }}</span>
+          {% endif %}
+        </div>
+        <div>
+          <label for="profile_picture"
+                 class="cursor-pointer inline-flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-white/80 text-sm font-medium px-4 py-2 rounded-xl transition-colors duration-150">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            Upload photo
+          </label>
+          <input id="profile_picture" name="profile_picture" type="file" accept="image/*" class="hidden" onchange="previewAvatar(this)">
+          <p class="text-white/30 text-xs mt-1.5">JPG, PNG or GIF · Max 5 MB</p>
+        </div>
+      </div>
+
+      <!-- Display name -->
+      <div class="mb-5">
+        <label class="block text-white/70 text-sm font-medium mb-2" for="display_name">Display name</label>
+        <input type="text"
+               id="display_name"
+               name="display_name"
+               value="{{ user_profile.display_name|default:'' }}"
+               placeholder="Your name"
+               maxlength="100"
+               class="w-full bg-white/[0.05] border border-white/[0.10] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/25 focus:outline-none focus:border-[#6142C0]/60 focus:bg-white/[0.07] transition-colors duration-150">
+      </div>
+
+      <!-- Email (read-only) -->
+      <div class="mb-6">
+        <label class="block text-white/70 text-sm font-medium mb-2">Email</label>
+        <div class="w-full bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-2.5 text-white/40 text-sm select-all">
+          {{ request.user.email }}
+        </div>
+        <p class="text-white/25 text-xs mt-1.5">Email cannot be changed here.</p>
+      </div>
+
+      <button type="submit"
+              class="bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors duration-150">
+        Save profile
+      </button>
+    </form>
+  </div>
+
+  <!-- Change password section -->
+  <div class="bg-[#0C0C30] border border-white/[0.07] rounded-2xl p-6 mb-6">
+    <h2 class="text-base font-semibold text-white mb-6">Change Password</h2>
+
+    <form method="post" action="?action=password">
+      {% csrf_token %}
+
+      <div class="mb-4">
+        <label class="block text-white/70 text-sm font-medium mb-2" for="new_password">New password</label>
+        <input type="password"
+               id="new_password"
+               name="new_password"
+               placeholder="Min. 8 characters"
+               minlength="8"
+               class="w-full bg-white/[0.05] border border-white/[0.10] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/25 focus:outline-none focus:border-[#6142C0]/60 focus:bg-white/[0.07] transition-colors duration-150">
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-white/70 text-sm font-medium mb-2" for="confirm_password">Confirm new password</label>
+        <input type="password"
+               id="confirm_password"
+               name="confirm_password"
+               placeholder="Repeat new password"
+               class="w-full bg-white/[0.05] border border-white/[0.10] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/25 focus:outline-none focus:border-[#6142C0]/60 focus:bg-white/[0.07] transition-colors duration-150">
+      </div>
+
+      <button type="submit"
+              class="bg-white/[0.07] hover:bg-white/[0.12] border border-white/[0.10] text-white/80 hover:text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors duration-150">
+        Update password
+      </button>
+    </form>
+  </div>
+
+  <!-- Logout section -->
+  <div class="bg-[#0C0C30] border border-white/[0.07] rounded-2xl p-6">
+    <h2 class="text-base font-semibold text-white mb-2">Sign out</h2>
+    <p class="text-white/40 text-sm mb-5">You'll be signed out of your account on this device.</p>
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit"
+              class="flex items-center gap-2 bg-[#DC3545]/10 hover:bg-[#DC3545]/20 border border-[#DC3545]/20 hover:border-[#DC3545]/40 text-[#F87171] text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-150">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Sign out
+      </button>
+    </form>
+  </div>
+
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var preview = document.getElementById('avatar-preview');
+      preview.innerHTML = '<img src="' + e.target.result + '" alt="" class="w-full h-full object-cover" style="border-radius:50%;">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

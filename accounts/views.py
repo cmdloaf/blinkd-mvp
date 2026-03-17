@@ -45,7 +45,7 @@ def login_view(request):
             res = get_supabase().auth.sign_in_with_password({"email": email, "password": password})
             user = _sync_user(res.user)
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-            return redirect(_safe_next(request, "/upload/dashboard/"))
+            return redirect(_safe_next(request, "/upload/home/"))
         except AuthApiError as e:
             logger.warning("Supabase login failed: %s", e)
             return render(request, "accounts/login.html", {"error": "Invalid email or password."})
@@ -79,7 +79,7 @@ def signup_view(request):
                 return render(request, "accounts/signup.html", {"success": "Check your email to confirm your account."})
             user = _sync_user(res.user)
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-            return redirect("/upload/dashboard/")
+            return redirect("/upload/home/")
         except AuthApiError as e:
             logger.warning("Supabase signup failed: %s", e)
             return render(request, "accounts/signup.html", {"error": "An account with this email may already exist.", "email": email})
@@ -92,7 +92,7 @@ def signup_view(request):
 
 def waitlist_view(request):
     if request.user.is_authenticated:
-        return redirect("/upload/dashboard/")
+        return redirect("/upload/home/")
 
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
@@ -146,7 +146,7 @@ def google_callback(request):
             return redirect("/auth/login/?error=not_approved")
         user = _sync_user(res.user)
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        return redirect("/upload/dashboard/")
+        return redirect("/upload/home/")
     except AuthApiError as e:
         logger.warning("Google OAuth callback failed: %s", e)
         return redirect("/auth/login/?error=oauth_failed")

@@ -8,6 +8,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
+from accounts.models import UserProfile
+from accounts.supabase_client import get_supabase_admin
 from .forms import GoalsForm, PersonaSelectionForm, ProductBackgroundForm
 from .llm import run_analysis
 from .models import AnalysisResult, ProductFlow, Screenshot
@@ -16,14 +18,94 @@ from .personas import PERSONAS
 logger = logging.getLogger(__name__)
 
 
+def _get_sidebar_context(request):
+    """Return sidebar-related context vars (user_profile, avatar_initials)."""
+    if not request.user.is_authenticated:
+        return {}
+    try:
+        user_profile = request.user.profile
+    except UserProfile.DoesNotExist:
+        user_profile = None
+    if user_profile:
+        avatar_initials = user_profile.avatar_initials
+    else:
+        avatar_initials = request.user.email[0].upper() if request.user.email else "?"
+    return {"user_profile": user_profile, "avatar_initials": avatar_initials}
+
+
 def landing(request):
     return render(request, "uploads/landing.html")
 
 
 @login_required
+def home(request):
+    flows = ProductFlow.objects.filter(user=request.user).order_by("-created_at")
+    ctx = {
+        "active_page": "home",
+        "total_projects": flows.count(),
+        "completed_count": flows.filter(analysis_status="complete").count(),
+        "in_progress_count": flows.filter(analysis_status="processing").count(),
+        "draft_count": flows.filter(analysis_status="pending").count(),
+        "recent_flows": flows[:5],
+    }
+    ctx.update(_get_sidebar_context(request))
+    return render(request, "uploads/home.html", ctx)
+
+
+@login_required
 def dashboard(request):
     flows = ProductFlow.objects.filter(user=request.user).order_by("-created_at")
-    return render(request, "uploads/dashboard.html", {"flows": flows})
+    ctx = {"flows": flows, "active_page": "projects"}
+    ctx.update(_get_sidebar_context(request))
+    return render(request, "uploads/dashboard.html", ctx)
+
+
+@login_required
+def settings_view(request):
+    action = request.GET.get("action", "")
+
+    try:
+        user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    except Exception:
+        user_profile = None
+
+    ctx = {
+        "active_page": "settings",
+        "user_profile": user_profile,
+        "avatar_initials": user_profile.avatar_initials if user_profile else request.user.email[0].upper(),
+    }
+
+    if request.method == "POST":
+        if action == "profile":
+            display_name = request.POST.get("display_name", "").strip()
+            if user_profile is None:
+                user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            user_profile.display_name = display_name
+            if "profile_picture" in request.FILES:
+                user_profile.profile_picture = request.FILES["profile_picture"]
+            user_profile.save()
+            ctx["user_profile"] = user_profile
+            ctx["avatar_initials"] = user_profile.avatar_initials
+            ctx["profile_success"] = True
+
+        elif action == "password":
+            new_password = request.POST.get("new_password", "")
+            confirm_password = request.POST.get("confirm_password", "")
+            if not new_password or len(new_password) < 8:
+                ctx["password_error"] = "Password must be at least 8 characters."
+            elif new_password != confirm_password:
+                ctx["password_error"] = "Passwords do not match."
+            else:
+                try:
+                    get_supabase_admin().auth.admin.update_user_by_id(
+                        str(request.user.id), {"password": new_password}
+                    )
+                    ctx["password_success"] = True
+                except Exception as e:
+                    logger.error("Password update failed: %s", e)
+                    ctx["password_error"] = "Password update failed. Please try again."
+
+    return render(request, "uploads/settings.html", ctx)
 
 
 WIZARD_STEPS = [
@@ -513,7 +595,7 @@ def analysis_view(request, flow_id):
             simulation_steps = parse_simulation_steps(sections.get("persona_simulation", ""))
             dashboard = _build_dashboard_context(recommendations, friction_items, simulation_steps, goal_achievability)
 
-    return render(request, "uploads/analysis.html", {
+    ctx = {
         "flow": flow,
         "analysis": analysis,
         "persona_name": persona_name,
@@ -524,5 +606,7 @@ def analysis_view(request, flow_id):
         "friction_items": friction_items,
         "simulation_steps": simulation_steps,
         "dashboard": dashboard,
-        "stepper": _build_stepper_context(flow, 6),
-    })
+        "active_page": "projects",
+    }
+    ctx.update(_get_sidebar_context(request))
+    return render(request, "uploads/analysis.html", ctx)

@@ -1,211 +1,165 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MRCWK7LWCN"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-MRCWK7LWCN');
-  </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard — Blinkd</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { alexandria: ['Alexandria', 'sans-serif'] }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { font-family: 'Alexandria', sans-serif; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin { animation: spin 1s linear infinite; }
-  </style>
-</head>
-<body class="bg-[#010122] min-h-screen text-white/90 antialiased">
+{% extends "uploads/dashboard_base.html" %}
+{% block title %}Projects{% endblock %}
 
-  <!-- Nav -->
-  <nav class="border-b border-white/[0.06] bg-[#010122]/95 backdrop-blur-sm sticky top-0 z-10">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
-      <a href="/">
-        <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="h-7 w-auto">
-      </a>
-      <div class="flex items-center gap-4">
-        <span class="text-white/35 text-sm hidden sm:block">{{ request.user.email }}</span>
-        <a href="{% url 'logout' %}" class="text-white/40 hover:text-white/70 text-sm transition-colors duration-150">Sign out</a>
-      </div>
+{% block content %}
+<main class="max-w-6xl mx-auto px-6 py-12">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-10">
+    <div>
+      <h1 class="text-2xl font-bold text-white tracking-tight">Projects</h1>
+      {% if flows %}
+      <p class="text-white/40 text-sm mt-1">
+        {{ flows|length }} test{{ flows|length|pluralize }}
+      </p>
+      {% endif %}
     </div>
-  </nav>
+    <a href="{% url 'uploads:step1' %}"
+       class="flex items-center gap-2 bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-150">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      New analysis
+    </a>
+  </div>
 
-  <!-- Main -->
-  <main class="max-w-6xl mx-auto px-6 py-12">
+  {% if flows %}
+  <!-- Flow grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for flow in flows %}
+    <div class="relative group bg-[#0C0C30] border border-white/[0.07] rounded-2xl p-6 flex flex-col gap-4 hover:border-[#6142C0]/30 transition-colors duration-200">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-10">
-      <div>
-        <h1 class="text-2xl font-bold text-white tracking-tight">Your analyses</h1>
-        {% if flows %}
-        <p class="text-white/40 text-sm mt-1">
-          {{ flows|length }} test{{ flows|length|pluralize }}
-        </p>
+      <!-- Delete button (hover reveal) -->
+      <form method="post" action="{% url 'uploads:delete_flow' flow_id=flow.id %}"
+            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+            onsubmit="return confirm('Delete this analysis? This cannot be undone.')">
+        {% csrf_token %}
+        <button type="submit"
+                class="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.05] hover:bg-[#DC3545]/20 text-white/30 hover:text-[#F87171] transition-colors duration-150"
+                title="Delete analysis">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </form>
+
+      <!-- Status badge -->
+      <div class="flex items-center justify-between">
+        {% if flow.analysis_status == "complete" %}
+          <span class="inline-flex items-center gap-1.5 bg-[#10B981]/15 text-[#34D399] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#34D399]"></span>Complete
+          </span>
+        {% elif flow.analysis_status == "processing" %}
+          <span class="inline-flex items-center gap-1.5 bg-[#F59E0B]/15 text-[#FBBF24] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
+            <svg class="w-3 h-3 spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            In progress
+          </span>
+        {% elif flow.analysis_status == "failed" %}
+          <span class="inline-flex items-center gap-1.5 bg-[#DC3545]/15 text-[#F87171] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#F87171]"></span>Failed
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-1.5 bg-white/[0.05] text-white/40 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>Draft
+          </span>
+        {% endif %}
+
+        <span class="text-white/25 text-xs pr-8">{{ flow.created_at|date:"M j, Y" }}</span>
+      </div>
+
+      <!-- Title -->
+      <div class="flex-1">
+        <p class="text-white/90 text-sm font-medium leading-snug">{{ flow.title }}</p>
+      </div>
+
+      <!-- Meta -->
+      <div class="flex items-center gap-4 text-white/35 text-xs">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          {% if flow.persona_type == "custom" %}
+            Custom
+          {% elif flow.persona_type %}
+            {{ flow.get_persona_type_display }}
+          {% else %}
+            No persona
+          {% endif %}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          {{ flow.screenshots.count }} screen{{ flow.screenshots.count|pluralize }}
+        </span>
+      </div>
+
+      <!-- Action button -->
+      <div class="pt-1 border-t border-white/[0.06]">
+        {% if flow.analysis_status == "complete" %}
+          <a href="{% url 'uploads:analysis' flow_id=flow.id %}"
+             class="flex items-center justify-between w-full text-[#6142C0] hover:text-white text-sm font-semibold transition-colors duration-150 group">
+            View results
+            <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        {% elif flow.analysis_status == "processing" %}
+          <a href="{% url 'uploads:analysis_loading' flow_id=flow.id %}"
+             class="flex items-center justify-between w-full text-white/40 text-sm font-medium">
+            View progress
+            <svg class="w-4 h-4 spin text-[#FBBF24]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </a>
+        {% elif flow.analysis_status == "failed" %}
+          <a href="{% url 'uploads:confirm' flow_id=flow.id %}"
+             class="flex items-center justify-between w-full text-[#F87171] hover:text-white text-sm font-semibold transition-colors duration-150 group">
+            Retry analysis
+            <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        {% else %}
+          <a href="{{ flow.get_next_url }}"
+             class="flex items-center justify-between w-full text-white/60 hover:text-white text-sm font-semibold transition-colors duration-150 group">
+            Continue
+            <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
         {% endif %}
       </div>
-      <a href="{% url 'uploads:step1' %}"
-         class="flex items-center gap-2 bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors duration-150">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        New analysis
-      </a>
+
     </div>
+    {% endfor %}
+  </div>
 
-    {% if flows %}
-    <!-- Flow grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {% for flow in flows %}
-      <div class="relative group bg-[#0C0C30] border border-white/[0.07] rounded-2xl p-6 flex flex-col gap-4 hover:border-[#6142C0]/30 transition-colors duration-200">
-
-        <!-- Delete button (hover reveal) -->
-        <form method="post" action="{% url 'uploads:delete_flow' flow_id=flow.id %}"
-              class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-              onsubmit="return confirm('Delete this analysis? This cannot be undone.')">
-          {% csrf_token %}
-          <button type="submit"
-                  class="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.05] hover:bg-[#DC3545]/20 text-white/30 hover:text-[#F87171] transition-colors duration-150"
-                  title="Delete analysis">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-            </svg>
-          </button>
-        </form>
-
-        <!-- Status badge -->
-        <div class="flex items-center justify-between">
-          {% if flow.analysis_status == "complete" %}
-            <span class="inline-flex items-center gap-1.5 bg-[#10B981]/15 text-[#34D399] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
-              <span class="w-1.5 h-1.5 rounded-full bg-[#34D399]"></span>Complete
-            </span>
-          {% elif flow.analysis_status == "processing" %}
-            <span class="inline-flex items-center gap-1.5 bg-[#F59E0B]/15 text-[#FBBF24] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
-              <svg class="w-3 h-3 spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              In progress
-            </span>
-          {% elif flow.analysis_status == "failed" %}
-            <span class="inline-flex items-center gap-1.5 bg-[#DC3545]/15 text-[#F87171] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
-              <span class="w-1.5 h-1.5 rounded-full bg-[#F87171]"></span>Failed
-            </span>
-          {% else %}
-            <span class="inline-flex items-center gap-1.5 bg-white/[0.05] text-white/40 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
-              <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>Draft
-            </span>
-          {% endif %}
-
-          <span class="text-white/25 text-xs pr-8">{{ flow.created_at|date:"M j, Y" }}</span>
-        </div>
-
-        <!-- Title -->
-        <div class="flex-1">
-          <p class="text-white/90 text-sm font-medium leading-snug">{{ flow.title }}</p>
-        </div>
-
-        <!-- Meta -->
-        <div class="flex items-center gap-4 text-white/35 text-xs">
-          <!-- Persona -->
-          <span class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
-            {% if flow.persona_type == "custom" %}
-              Custom
-            {% elif flow.persona_type %}
-              {{ flow.get_persona_type_display }}
-            {% else %}
-              No persona
-            {% endif %}
-          </span>
-
-          <!-- Screenshots -->
-          <span class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            {{ flow.screenshots.count }} screen{{ flow.screenshots.count|pluralize }}
-          </span>
-        </div>
-
-        <!-- Action button -->
-        <div class="pt-1 border-t border-white/[0.06]">
-          {% if flow.analysis_status == "complete" %}
-            <a href="{% url 'uploads:analysis' flow_id=flow.id %}"
-               class="flex items-center justify-between w-full text-[#6142C0] hover:text-white text-sm font-semibold transition-colors duration-150 group">
-              View results
-              <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            </a>
-          {% elif flow.analysis_status == "processing" %}
-            <a href="{% url 'uploads:analysis_loading' flow_id=flow.id %}"
-               class="flex items-center justify-between w-full text-white/40 text-sm font-medium">
-              View progress
-              <svg class="w-4 h-4 spin text-[#FBBF24]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-            </a>
-          {% elif flow.analysis_status == "failed" %}
-            <a href="{% url 'uploads:confirm' flow_id=flow.id %}"
-               class="flex items-center justify-between w-full text-[#F87171] hover:text-white text-sm font-semibold transition-colors duration-150 group">
-              Retry analysis
-              <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            </a>
-          {% else %}
-            <a href="{{ flow.get_next_url }}"
-               class="flex items-center justify-between w-full text-white/60 hover:text-white text-sm font-semibold transition-colors duration-150 group">
-              Continue
-              <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            </a>
-          {% endif %}
-        </div>
-
-      </div>
-      {% endfor %}
+  {% else %}
+  <!-- Empty state -->
+  <div class="flex flex-col items-center justify-center py-28 text-center">
+    <div class="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center mb-6">
+      <svg class="w-6 h-6 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
     </div>
+    <h2 class="text-white/80 text-lg font-semibold mb-2">No analyses yet</h2>
+    <p class="text-white/35 text-sm max-w-xs leading-relaxed mb-8">
+      Upload your product flow and run your first UX simulation to see results here.
+    </p>
+    <a href="{% url 'uploads:step1' %}"
+       class="bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors duration-150">
+      Start your first analysis
+    </a>
+  </div>
+  {% endif %}
 
-    {% else %}
-    <!-- Empty state -->
-    <div class="flex flex-col items-center justify-center py-28 text-center">
-      <div class="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center mb-6">
-        <svg class="w-6 h-6 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-      </div>
-      <h2 class="text-white/80 text-lg font-semibold mb-2">No analyses yet</h2>
-      <p class="text-white/35 text-sm max-w-xs leading-relaxed mb-8">
-        Upload your product flow and run your first UX simulation to see results here.
-      </p>
-      <a href="{% url 'uploads:step1' %}"
-         class="bg-[#6142C0] hover:bg-[#4E198C] text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors duration-150">
-        Start your first analysis
-      </a>
-    </div>
-    {% endif %}
+</main>
 
-  </main>
-
-</body>
-</html>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; }
+</style>
+{% endblock %}

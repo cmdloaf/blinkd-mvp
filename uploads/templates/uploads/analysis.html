@@ -1,15 +1,8 @@
-{% extends "uploads/base.html" %}
+{% extends "uploads/dashboard_base.html" %}
 {% block title %}Analysis Results{% endblock %}
 
-{% block extra_head %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.body.classList.add('dashboard-layout');
-});
-</script>
-{% endblock %}
-
 {% block content %}
+<div class="analysis-page-wrapper">
 <h2>UX Analysis &mdash; {{ persona_name }}</h2>
 
 {% if analysis %}
@@ -297,6 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <button type="submit" class="btn">Run Analysis</button>
 </form>
 {% endif %}
+</div>{# /analysis-page-wrapper #}
 {% endblock %}
 
 {% block extra_js %}

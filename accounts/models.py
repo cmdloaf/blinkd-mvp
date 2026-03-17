@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -59,6 +60,27 @@ class AllowedEmail(models.Model):
 
 def is_email_allowed(email: str) -> bool:
     return AllowedEmail.objects.filter(email__iexact=email.strip()).exists()
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
+    display_name = models.CharField(max_length=100, blank=True)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", null=True, blank=True)
+
+    def __str__(self):
+        return f"Profile of {self.user.email}"
+
+    @property
+    def avatar_initials(self):
+        """Return 1–2 uppercase initials for the avatar fallback."""
+        if self.display_name:
+            parts = self.display_name.strip().split()
+            if len(parts) >= 2:
+                return (parts[0][0] + parts[-1][0]).upper()
+            return parts[0][0].upper()
+        return self.user.email[0].upper()
 
 
 class WaitlistEntry(models.Model):
