@@ -39,6 +39,11 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS", "http://localhost:8000"
 ).split(",")
 
+DOMAIN_REDIRECTS = {
+    "blinkd.site": "app.blinkd.site",
+    "www.blinkd.site": "app.blinkd.site",
+}
+
 
 # Application definition
 
@@ -59,6 +64,7 @@ LOGIN_URL = "/auth/login/"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "blinkd.middleware.DomainRedirectMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
