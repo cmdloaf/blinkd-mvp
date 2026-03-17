@@ -50,6 +50,23 @@ The system automatically detects available API keys and routes requests:
 - No manual `LLM_PROVIDER` setting needed — priority is automatic
 - Both `structure_custom_persona()` and `run_analysis()` follow this fallback chain
 
+### Environment Variables
+Key env vars and their purpose:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `APP_ENV` | `development` | Environment identifier. Set to `production` on prod, `staging` on staging. Controls the staging warning banner. |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated list of allowed hosts. Set to `app.blinkd.site,blinkd.site` on production. |
+| `CSRF_TRUSTED_ORIGINS` | `http://localhost:8000` | Comma-separated trusted origins for CSRF (required for custom domains in Django 4.0+). Set to `https://app.blinkd.site` on production. |
+| `DATABASE_URL` | (SQLite) | Postgres connection string. Set from Supabase when deployed. |
+| `SECRET_KEY` | (required) | Django secret key. |
+| `DEBUG` | `False` | Set to `True` only for local development. |
+| `GEMINI_API_KEY` | `""` | Google Gemini API key. |
+| `ANTHROPIC_API_KEY` | `""` | Anthropic Claude API key (fallback). |
+
+### Staging Banner
+A warning banner is rendered at the top of every page when `APP_ENV != "production"`. It is injected via `uploads/context_processors.py` and appears in both `base.html` and `dashboard_base.html`.
+
 When suggesting improvements:
 - Assume server-rendered flows.
 - Avoid SPA-specific assumptions unless specified.

@@ -20,6 +20,11 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    {% if APP_ENV != "production" %}
+    <div style="background:#F59E0B;color:#1A1A2E;text-align:center;padding:6px 16px;font-family:'Alexandria',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">
+        {{ APP_ENV|upper }} — This is not the production environment
+    </div>
+    {% endif %}
     <header class="site-header">
         <a href="{% url 'uploads:home' %}" class="dashboard-back-link">&#8592; Dashboard</a>
         <img src="{% static 'uploads/images/FINAL_Logo Light Transparent.png' %}" alt="blinkd" class="site-logo">
