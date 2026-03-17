@@ -65,6 +65,7 @@ LOGIN_URL = "/auth/login/"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "blinkd.middleware.DomainRedirectMiddleware",
+    "blinkd.middleware.BasicAuthMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
