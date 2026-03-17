@@ -502,6 +502,46 @@ def analysis_status_api(request, flow_id):
     return JsonResponse({"status": flow.analysis_status})
 
 
+def _build_insight_pairs(friction_items, recommendations):
+    """Pair friction items with recommendations.
+
+    Primary: match by pattern_id.
+    Fallback: pair by position (nth friction → nth rec) for any unmatched items.
+    Orphan recs (beyond friction count, with no pattern match) are appended at the end.
+    """
+    rec_by_pattern = {}
+    for rec in recommendations:
+        pid = (rec.get("pattern_id") or "").strip()
+        if pid and pid not in rec_by_pattern:
+            rec_by_pattern[pid] = rec
+
+    used_rec_indices = set()
+    pairs = []
+
+    for i, friction in enumerate(friction_items):
+        pid = (friction.get("pattern_id") or "").strip()
+        rec = rec_by_pattern.get(pid)
+        if rec:
+            # Mark index of this rec as used
+            try:
+                used_rec_indices.add(recommendations.index(rec))
+            except ValueError:
+                pass
+        else:
+            # Positional fallback: use the rec at the same index if available and not yet used
+            if i < len(recommendations) and i not in used_rec_indices:
+                rec = recommendations[i]
+                used_rec_indices.add(i)
+        pairs.append({"insight": friction, "recommendation": rec})
+
+    # Append any recs not consumed above
+    for j, rec in enumerate(recommendations):
+        if j not in used_rec_indices:
+            pairs.append({"insight": None, "recommendation": rec})
+
+    return pairs
+
+
 def _build_dashboard_context(recommendations, friction_items, simulation_steps, goal_achievability=None):
     """Build sorted/counted dashboard context for the template."""
     priority_order = {"high": 0, "med": 1, "low": 2}
@@ -535,6 +575,7 @@ def _build_dashboard_context(recommendations, friction_items, simulation_steps, 
         "total_friction": len(sorted_friction),
         "sorted_recommendations": sorted_recs,
         "sorted_friction": sorted_friction,
+        "insight_pairs": _build_insight_pairs(sorted_friction, sorted_recs),
         "problematic_steps_count": len(problematic_steps),
         "total_steps": len(simulation_steps) if simulation_steps else 0,
         "goal_achievable": goal_achievability.get("achievable", "N/A") if goal_achievability else "N/A",

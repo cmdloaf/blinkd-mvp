@@ -1,0 +1,56 @@
+{% comment %}
+  Variables: step (simulation step dict), step_number (str/int)
+  Renders the right-side insight panel for one simulation row.
+  step fields: step, inner_monologue, expectation, hesitation, confusion, emotional_state, verdict, verdict_class
+{% endcomment %}
+<div class="sim-verdict-row">
+  <span class="sim-step-label">Step {{ step_number }}</span>
+  <span class="sim-verdict {{ step.verdict_class }}">{{ step.verdict }}</span>
+</div>
+{% if step.inner_monologue %}
+<p class="sim-monologue-new">&ldquo;{{ step.inner_monologue }}&rdquo;</p>
+{% endif %}
+{% if step.verdict == "Continue" %}
+<button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
+<div class="expandable-details">
+  {% if step.expectation %}
+  <div class="rec-field">
+    <span class="rec-label">Expectation</span>
+    <p>{{ step.expectation }}</p>
+  </div>
+  {% endif %}
+  {% if step.emotional_state %}
+  <div class="rec-field">
+    <span class="rec-label">Emotional State</span>
+    <p>{{ step.emotional_state }}</p>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="sim-step-signals">
+  {% if step.hesitation and step.hesitation != "None" %}
+  <div class="sim-signal">
+    <span class="rec-label">Hesitation</span>
+    <p class="sim-signal-text">{{ step.hesitation }}</p>
+  </div>
+  {% endif %}
+  {% if step.confusion and step.confusion != "None" %}
+  <div class="sim-signal">
+    <span class="rec-label">Confusion</span>
+    <p class="sim-signal-text">{{ step.confusion }}</p>
+  </div>
+  {% endif %}
+  {% if step.emotional_state %}
+  <div class="sim-signal">
+    <span class="rec-label">Emotional State</span>
+    <p class="sim-signal-text">{{ step.emotional_state }}</p>
+  </div>
+  {% endif %}
+  {% if step.expectation %}
+  <div class="sim-signal">
+    <span class="rec-label">Expectation</span>
+    <p class="sim-signal-text">{{ step.expectation }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}

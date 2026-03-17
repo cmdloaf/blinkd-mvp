@@ -1,0 +1,95 @@
+{% comment %}
+  Variables: pair (dict), persona_name, pair_number
+    pair.insight        — friction item dict, or None
+    pair.recommendation — recommendation dict, or None
+    pair_number         — loop counter (1, 2, 3…)
+{% endcomment %}
+{% with insight=pair.insight rec=pair.recommendation %}
+
+{% if insight %}
+<div class="compact-card sev-{{ insight.severity }}">
+
+  {# ── Insight header: number + label (left) / severity badge (right) ── #}
+  <div class="compact-card-header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      {% if pair_number %}<span class="pair-number">{{ pair_number }}</span>{% endif %}
+      <span class="rec-label">Insight</span>
+    </div>
+    <span class="rec-priority priority-{{ insight.severity }}">
+      {% if insight.severity == "high" %}HIGH{% elif insight.severity == "med" %}MED{% else %}LOW{% endif %}
+    </span>
+  </div>
+
+  {# ── Insight description ── #}
+  <p class="insight-body-text">{{ insight.description }}</p>
+
+  {# ── Recommendation ── #}
+  {% if rec %}
+  <div class="insight-block-rec">
+    {# Recommendation header: label + badge grouped tight on the left ── #}
+    <div class="insight-rec-header-row">
+      <span class="rec-label">Recommendation</span>
+      {% if rec.goal_impact %}
+      <span class="goal-impact-badge {% if 'blocker' in rec.goal_impact|lower %}goal-impact-blocker{% elif 'improves' in rec.goal_impact|lower %}goal-impact-improves{% elif 'clarifies' in rec.goal_impact|lower %}goal-impact-clarifies{% endif %}">{{ rec.goal_impact }}</span>
+      {% endif %}
+    </div>
+    <p class="insight-rec-text">{{ rec.actionable_fix|default:rec.observed_problem }}</p>
+  </div>
+  {% endif %}
+
+  {# ── Expandable details ── #}
+  {% if rec or insight.persona_reasoning %}
+  <button class="expand-toggle" onclick="toggleDetails(this)">View details →</button>
+  <div class="expandable-details">
+    {% if rec.why_it_happens %}
+    <div class="rec-field"><span class="rec-label">Root Cause</span><p>{{ rec.why_it_happens }}</p></div>
+    {% endif %}
+    {% if rec.violated_pattern %}
+    <div class="rec-field"><span class="rec-label">Violated Pattern</span><p>{{ rec.violated_pattern }}</p></div>
+    {% endif %}
+    {% if rec.expected_impact %}
+    <div class="rec-field"><span class="rec-label">Expected Outcome</span><p>{{ rec.expected_impact }}</p></div>
+    {% endif %}
+    {% if insight.persona_reasoning %}
+    <div class="rec-field"><span class="rec-label">Why {{ persona_name }} Struggles</span><p>{{ insight.persona_reasoning }}</p></div>
+    {% endif %}
+    {% if not rec and insight.root_cause %}
+    <div class="rec-field"><span class="rec-label">Root Cause</span><p>{{ insight.root_cause }}</p></div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+{% else %}
+{# ── Orphan recommendation (no matching friction item) ── #}
+<div class="compact-card sev-{{ rec.priority }}">
+  <div class="compact-card-header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      {% if pair_number %}<span class="pair-number">{{ pair_number }}</span>{% endif %}
+      <span class="rec-label">Recommendation</span>
+    </div>
+    <span class="rec-priority priority-{{ rec.priority }}">
+      {% if rec.priority == "high" %}HIGH{% elif rec.priority == "med" %}MED{% else %}LOW{% endif %}
+    </span>
+  </div>
+  <p class="insight-body-text">{{ rec.actionable_fix|default:rec.observed_problem }}</p>
+  {% if rec.goal_impact %}
+  <span class="goal-impact-badge {% if 'blocker' in rec.goal_impact|lower %}goal-impact-blocker{% elif 'improves' in rec.goal_impact|lower %}goal-impact-improves{% elif 'clarifies' in rec.goal_impact|lower %}goal-impact-clarifies{% endif %}">{{ rec.goal_impact }}</span>
+  {% endif %}
+  <button class="expand-toggle" onclick="toggleDetails(this)">View details →</button>
+  <div class="expandable-details">
+    {% if rec.why_it_happens %}
+    <div class="rec-field"><span class="rec-label">Root Cause</span><p>{{ rec.why_it_happens }}</p></div>
+    {% endif %}
+    {% if rec.violated_pattern %}
+    <div class="rec-field"><span class="rec-label">Violated Pattern</span><p>{{ rec.violated_pattern }}</p></div>
+    {% endif %}
+    {% if rec.expected_impact %}
+    <div class="rec-field"><span class="rec-label">Expected Outcome</span><p>{{ rec.expected_impact }}</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endwith %}

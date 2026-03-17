@@ -3,316 +3,200 @@
 
 {% block content %}
 <div class="analysis-page-wrapper">
-<h2>UX Analysis &mdash; {{ persona_name }}</h2>
+
+{# ── Page Header ── #}
+<div class="apr-header">
+  <div class="analysis-meta">Persona Analysis</div>
+  <h1 class="apr-header-title">Recommendations</h1>
+  <p class="apr-header-sub">{{ persona_name }}{% if flow.name %} &mdash; {{ flow.name }}{% endif %}</p>
+</div>
 
 {% if analysis %}
 
 {% if sections and dashboard %}
 
-{# ── Executive Summary ── #}
-{% if executive_summary %}
-<div class="executive-summary">
-    <h3>Product Understanding</h3>
-    <span class="clarity-badge clarity-{{ executive_summary.clarity_status }}">
+
+{# ── C: Goal Achievability + Product Clarity Cards ── #}
+{% if goal_achievability or executive_summary %}
+<div class="summary-cards-grid{% if not executive_summary %} summary-cards-grid--single{% endif %}">
+
+  {# Left: Goal Achievability #}
+  {% if goal_achievability %}
+  <div class="goal-achievability-tile">
+    <div class="goal-tile-header">
+      <h3>Goal Achievability</h3>
+      <span class="goal-badge {{ goal_achievability.achievable_class }}">{{ goal_achievability.achievable }}</span>
+    </div>
+    <div class="goal-tile-body">
+      {% if goal_achievability.stated_goal %}
+      <div class="goal-field">
+        <span class="rec-label">Primary Goal</span>
+        <p>{{ goal_achievability.stated_goal }}</p>
+      </div>
+      {% endif %}
+      {% if goal_achievability.breakdown_step and goal_achievability.breakdown_step != "N/A" %}
+      <div class="goal-field">
+        <span class="rec-label">Breaks Down At</span>
+        <p>{{ goal_achievability.breakdown_step }}</p>
+      </div>
+      {% endif %}
+      <div class="goal-meta">
+        <span class="goal-risk {{ goal_achievability.dropoff_risk_class }}">
+          Drop-off Risk: {{ goal_achievability.dropoff_risk }}
+        </span>
+      </div>
+      {% if goal_achievability.root_cause and goal_achievability.root_cause != "N/A" %}
+      <div class="goal-field">
+        <span class="rec-label">Root Cause</span>
+        <p>{{ goal_achievability.root_cause }}</p>
+      </div>
+      {% endif %}
+      {% if goal_achievability.direct_blockers and goal_achievability.direct_blockers != "None identified" %}
+      <div class="goal-field">
+        <span class="rec-label">Direct Blockers</span>
+        <p>{{ goal_achievability.direct_blockers }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Right: Product Clarity #}
+  {% if executive_summary %}
+  <div class="goal-achievability-tile">
+    <div class="goal-tile-header">
+      <h3>Product Clarity</h3>
+      <span class="clarity-badge clarity-{{ executive_summary.clarity_status }}">
         {% if executive_summary.clarity_status == "clear" %}Clear
         {% elif executive_summary.clarity_status == "unclear" %}Needs Work
         {% else %}Mixed Signals{% endif %}
-    </span>
-    {% if executive_summary.summary %}
-    <div class="exec-summary-text">{{ executive_summary.summary }}</div>
-    {% endif %}
-    {% if executive_summary.key_concerns %}
-    <div class="exec-concerns">
-        <h4>Early Signals</h4>
-        <ul>
-            {% for concern in executive_summary.key_concerns %}
-            <li>{{ concern }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-</div>
-{% endif %}
-
-{# ── Goal Achievability ── #}
-{% if goal_achievability %}
-<div class="goal-achievability-tile">
-    <div class="goal-tile-header">
-        <h3>Goal Achievability</h3>
-        <span class="goal-badge {{ goal_achievability.achievable_class }}">
-            {{ goal_achievability.achievable }}
-        </span>
+      </span>
     </div>
     <div class="goal-tile-body">
-        {% if goal_achievability.stated_goal %}
-        <div class="goal-field">
-            <span class="rec-label">Primary Goal</span>
-            <p>{{ goal_achievability.stated_goal }}</p>
-        </div>
-        {% endif %}
-        {% if goal_achievability.breakdown_step and goal_achievability.breakdown_step != "N/A" %}
-        <div class="goal-field">
-            <span class="rec-label">Breaks Down At</span>
-            <p>{{ goal_achievability.breakdown_step }}</p>
-        </div>
-        {% endif %}
-        <div class="goal-meta">
-            <span class="goal-risk {{ goal_achievability.dropoff_risk_class }}">
-                Drop-off Risk: {{ goal_achievability.dropoff_risk }}
-            </span>
-        </div>
-        {% if goal_achievability.root_cause and goal_achievability.root_cause != "N/A" %}
-        <div class="goal-field">
-            <span class="rec-label">Root Cause</span>
-            <p>{{ goal_achievability.root_cause }}</p>
-        </div>
-        {% endif %}
-        {% if goal_achievability.direct_blockers and goal_achievability.direct_blockers != "None identified" %}
-        <div class="goal-field">
-            <span class="rec-label">Direct Blockers</span>
-            <p>{{ goal_achievability.direct_blockers }}</p>
-        </div>
-        {% endif %}
+      {% if executive_summary.summary %}
+      <div class="goal-field">
+        <p>{{ executive_summary.summary }}</p>
+      </div>
+      {% endif %}
+      {% for concern in executive_summary.key_concerns %}
+      <div class="goal-field">
+        <span class="rec-label">{% if forloop.first %}Clarity Status{% else %}Early Confusion Signals{% endif %}</span>
+        <p>{{ concern }}</p>
+      </div>
+      {% endfor %}
     </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endif %}
 
-{# ── Stats Bar ── #}
-<div class="dashboard-stats">
-    <div class="stat-card stat-critical">
-        <div class="stat-number">{{ dashboard.critical_count }}</div>
-        <div class="stat-label">Critical Issues</div>
-    </div>
-    <div class="stat-card stat-warning">
-        <div class="stat-number">{{ dashboard.total_recommendations }}</div>
-        <div class="stat-label">Recommendations</div>
-    </div>
-    <div class="stat-card stat-info">
-        <div class="stat-number">{{ dashboard.total_friction }}</div>
-        <div class="stat-label">Friction Points</div>
-    </div>
-    <div class="stat-card stat-info">
-        <div class="stat-number">{{ dashboard.problematic_steps_count }}/{{ dashboard.total_steps }}</div>
-        <div class="stat-label">Problem Steps</div>
-    </div>
-    {% if dashboard.goal_achievable != "N/A" %}
-    <div class="stat-card stat-goal">
-        <div class="stat-number stat-goal-text">{{ dashboard.goal_achievable }}</div>
-        <div class="stat-label">Goal Status</div>
-    </div>
-    {% endif %}
-</div>
 
-{# ── Two-Column Grid ── #}
-<div class="dashboard-grid">
+{# ── E: Insights & Recommendations ── #}
+{% if dashboard.insight_pairs %}
+<section class="recs-section">
+  <div class="recs-section-header">
+    <h2 class="section-title">Insights &amp; Recommendations</h2>
+    <span class="panel-count">{{ dashboard.insight_pairs|length }}</span>
+  </div>
+  <div class="recs-feed">
+    {% for pair in dashboard.insight_pairs %}
+    {% include "uploads/_insight_block.html" with pair=pair persona_name=persona_name pair_number=forloop.counter %}
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<div class="empty-state">No insights generated.</div>
+{% endif %}
 
-    {# Left: Top Insights (Friction) #}
-    <div class="dashboard-panel">
-        <div class="panel-header">
-            <h3>Top Insights <span class="panel-count">{{ dashboard.total_friction }}</span></h3>
-        </div>
-        <div class="panel-body">
-            {% if dashboard.sorted_friction %}
-                {% for item in dashboard.sorted_friction %}
-                <div class="compact-card sev-{{ item.severity }}">
-                    <div class="compact-card-header">
-                        <div class="compact-card-title">{{ item.description }}</div>
-                        <span class="rec-priority priority-{{ item.severity }}">
-                            {% if item.severity == "high" %}HIGH{% elif item.severity == "med" %}MED{% else %}LOW{% endif %}
-                        </span>
-                    </div>
-                    <div class="compact-card-summary">{{ item.root_cause|truncatewords:25 }}</div>
-                    {% if item.persona_reasoning or item.root_cause %}
-                    <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
-                    <div class="expandable-details">
-                        {% if item.root_cause %}
-                        <div class="rec-field">
-                            <span class="rec-label">Root Cause</span>
-                            <p>{{ item.root_cause }}</p>
-                        </div>
-                        {% endif %}
-                        {% if item.persona_reasoning %}
-                        <div class="rec-field">
-                            <span class="rec-label">Why {{ persona_name }} Struggles</span>
-                            <p>{{ item.persona_reasoning }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">No friction items detected.</div>
-            {% endif %}
-        </div>
-    </div>
-
-    {# Right: Next Steps (Recommendations) #}
-    <div class="dashboard-panel">
-        <div class="panel-header">
-            <h3>Next Steps <span class="panel-count">{{ dashboard.total_recommendations }}</span></h3>
-        </div>
-        <div class="panel-body">
-            {% if dashboard.sorted_recommendations %}
-                {% for rec in dashboard.sorted_recommendations %}
-                <div class="compact-card sev-{{ rec.priority }}">
-                    <div class="compact-card-header">
-                        <div class="compact-card-title">{{ rec.title|default:rec.observed_problem|truncatewords:15 }}</div>
-                        <span class="rec-priority priority-{{ rec.priority }}">
-                            {% if rec.priority == "high" %}HIGH{% elif rec.priority == "med" %}MED{% else %}LOW{% endif %}
-                        </span>
-                    </div>
-                    {% if rec.summary %}
-                    <div class="compact-card-summary">{{ rec.summary }}</div>
-                    {% endif %}
-                    {% if rec.goal_impact %}
-                    <span class="goal-impact-badge {% if 'blocker' in rec.goal_impact|lower %}goal-impact-blocker{% elif 'improves' in rec.goal_impact|lower %}goal-impact-improves{% elif 'clarifies' in rec.goal_impact|lower %}goal-impact-clarifies{% endif %}">{{ rec.goal_impact }}</span>
-                    {% endif %}
-                    <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
-                    <div class="expandable-details">
-                        {% if rec.why_it_happens %}
-                        <div class="rec-field">
-                            <span class="rec-label">Root Cause</span>
-                            <p>{{ rec.why_it_happens }}</p>
-                        </div>
-                        {% endif %}
-                        {% if rec.violated_pattern %}
-                        <div class="rec-field">
-                            <span class="rec-label">Violated Pattern</span>
-                            <p>{{ rec.violated_pattern }}</p>
-                        </div>
-                        {% endif %}
-                        {% if rec.actionable_fix %}
-                        <div class="rec-field">
-                            <span class="rec-label">Full Fix</span>
-                            <p>{{ rec.actionable_fix }}</p>
-                        </div>
-                        {% endif %}
-                        {% if rec.expected_impact %}
-                        <div class="rec-field">
-                            <span class="rec-label">Expected Outcome</span>
-                            <p>{{ rec.expected_impact }}</p>
-                        </div>
-                        {% endif %}
-                        {% if rec.goal_impact %}
-                        <div class="rec-field">
-                            <span class="rec-label">Goal Impact</span>
-                            <p>{{ rec.goal_impact }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">No recommendations generated.</div>
-            {% endif %}
-        </div>
-    </div>
-
-</div>
-
-{# ── Persona Simulation (Collapsible) ── #}
+{# ── F: Screenshot + Simulation Feed ── #}
 {% if simulation_steps %}
-<div class="collapsible-section" id="simulation-section">
-    <div class="collapsible-header" onclick="toggleCollapsible('simulation-section')">
-        <h3>Persona Simulation ({{ dashboard.total_steps }} steps)</h3>
-        <span class="collapsible-toggle">&minus;</span>
-    </div>
-    <div class="collapsible-body">
-        {% for step in simulation_steps %}
-        <div class="sim-step">
-            <div class="sim-header">
-                <span class="sim-step-num">Step {{ step.step }}</span>
-                <span class="sim-verdict {{ step.verdict_class }}">{{ step.verdict }}</span>
-            </div>
-            {% if step.inner_monologue %}
-            <div class="sim-monologue">&ldquo;{{ step.inner_monologue }}&rdquo;</div>
-            {% endif %}
+{% with screenshots=flow.screenshots.all %}
+<section class="sim-feed-section">
+  <h2 class="section-title">Flow Walkthrough</h2>
+  <div class="sim-feed">
+    {% for step in simulation_steps %}
+    {% with step_pos=forloop.counter %}
+    <div class="sim-row" data-step="{{ step.step }}">
 
-            {% if step.verdict == "Continue" %}
-            <button class="expand-toggle" onclick="toggleDetails(this)">Show details</button>
-            <div class="expandable-details">
-            {% else %}
-            <div class="sim-details">
-            {% endif %}
-                {% if step.expectation %}
-                <div class="rec-field">
-                    <span class="rec-label">Expectation</span>
-                    <p>{{ step.expectation }}</p>
-                </div>
-                {% endif %}
-                {% if step.hesitation and step.hesitation != "None" %}
-                <div class="rec-field">
-                    <span class="rec-label">Hesitation</span>
-                    <p>{{ step.hesitation }}</p>
-                </div>
-                {% endif %}
-                {% if step.confusion and step.confusion != "None" %}
-                <div class="rec-field">
-                    <span class="rec-label">Confusion</span>
-                    <p>{{ step.confusion }}</p>
-                </div>
-                {% endif %}
-                {% if step.emotional_state %}
-                <div class="rec-field">
-                    <span class="rec-label">Emotional State</span>
-                    <p>{{ step.emotional_state }}</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+      <div class="sim-row-screenshot">
+        {% for ss in screenshots %}
+          {% if forloop.counter == step_pos %}
+          <img src="{{ ss.image.url }}" class="sim-screenshot-thumb" alt="Step {{ step.step }}">
+          {% endif %}
         {% endfor %}
+        <div class="sim-screenshot-num">{{ step.step }}</div>
+        <div class="sim-screenshot-placeholder">No screenshot</div>
+      </div>
+
+      <div class="sim-row-insight">
+        {% include "uploads/_screenshot_with_step.html" with step=step step_number=step.step %}
+      </div>
+
     </div>
-</div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+</section>
+{% endwith %}
 {% endif %}
 
 {% else %}
 {# ── Fallback: raw text if parsing failed ── #}
 <div class="analysis-section">
-    <div class="analysis-content">{{ analysis.raw_response }}</div>
+  <div class="analysis-content">{{ analysis.raw_response }}</div>
 </div>
 {% endif %}
 
 <p class="muted" style="margin-top: 24px;">Generated {{ analysis.created_at }}</p>
 
 <div class="button-row">
-    <form method="post" style="display: inline;">
-        {% csrf_token %}
-        <button type="submit" class="btn-outline">Re-run Analysis</button>
-    </form>
-    <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline">Back to Flow</a>
+  <form method="post" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn-outline">Re-run Analysis</button>
+  </form>
+  <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline">Back to Flow</a>
 </div>
 
 {% else %}
 <p>No analysis results yet.</p>
 <form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn">Run Analysis</button>
+  {% csrf_token %}
+  <button type="submit" class="btn">Run Analysis</button>
 </form>
 {% endif %}
+
 </div>{# /analysis-page-wrapper #}
 {% endblock %}
 
 {% block extra_js %}
 <script>
 function toggleDetails(button) {
-    var details = button.nextElementSibling;
-    if (details.classList.contains('expanded')) {
-        details.classList.remove('expanded');
-        button.textContent = 'Show details';
-    } else {
-        details.classList.add('expanded');
-        button.textContent = 'Hide details';
-    }
+  var details = button.nextElementSibling;
+  if (details.classList.contains('expanded')) {
+    details.classList.remove('expanded');
+    button.textContent = 'View details →';
+  } else {
+    details.classList.add('expanded');
+    button.textContent = 'Hide details ↑';
+  }
 }
 
 function toggleCollapsible(sectionId) {
-    var section = document.getElementById(sectionId);
-    if (section.classList.contains('collapsed')) {
-        section.classList.remove('collapsed');
-    } else {
-        section.classList.add('collapsed');
-    }
+  var section = document.getElementById(sectionId);
+  if (section.classList.contains('collapsed')) {
+    section.classList.remove('collapsed');
+  } else {
+    section.classList.add('collapsed');
+  }
 }
+
+// Simulation row hover highlight
+(function () {
+  document.querySelectorAll('.sim-row').forEach(function (row) {
+    row.addEventListener('mouseenter', function () { row.classList.add('is-highlighted'); });
+    row.addEventListener('mouseleave', function () { row.classList.remove('is-highlighted'); });
+  });
+})();
 </script>
 {% endblock %}

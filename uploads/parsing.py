@@ -74,6 +74,13 @@ def parse_executive_summary(product_understanding_text):
         # Fall back to subsequent sentences
         concerns = [s.strip() for s in sentences[2:5] if s.strip()]
 
+    # Strip AI-generated label prefixes embedded in concern text
+    _CONCERN_PREFIXES = re.compile(
+        r'^(?:clarity\s+status|early\s+confusion\s+signals?|confusion\s+signals?|signal)\s*:\s*',
+        re.IGNORECASE,
+    )
+    concerns = [_CONCERN_PREFIXES.sub('', c).strip() for c in concerns]
+
     return {
         "clarity_status": clarity_status,
         "summary": summary,

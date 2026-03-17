@@ -1,0 +1,81 @@
+{% comment %}
+  Variables: item (rec or friction dict), type ("rec"|"friction"), persona_name
+  Renders a compact card for either a recommendation or friction item.
+{% endcomment %}
+{% if type == "rec" %}
+<div class="compact-card sev-{{ item.priority }}">
+  <div class="compact-card-header">
+    <div class="compact-card-title">{{ item.title|default:item.observed_problem|truncatewords:15 }}</div>
+    <span class="rec-priority priority-{{ item.priority }}">
+      {% if item.priority == "high" %}HIGH{% elif item.priority == "med" %}MED{% else %}LOW{% endif %}
+    </span>
+  </div>
+  {% if item.summary %}
+  <div class="compact-card-summary">{{ item.summary }}</div>
+  {% endif %}
+  {% if item.goal_impact %}
+  <span class="goal-impact-badge {% if 'blocker' in item.goal_impact|lower %}goal-impact-blocker{% elif 'improves' in item.goal_impact|lower %}goal-impact-improves{% elif 'clarifies' in item.goal_impact|lower %}goal-impact-clarifies{% endif %}">{{ item.goal_impact }}</span>
+  {% endif %}
+  <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
+  <div class="expandable-details">
+    {% if item.why_it_happens %}
+    <div class="rec-field">
+      <span class="rec-label">Root Cause</span>
+      <p>{{ item.why_it_happens }}</p>
+    </div>
+    {% endif %}
+    {% if item.violated_pattern %}
+    <div class="rec-field">
+      <span class="rec-label">Violated Pattern</span>
+      <p>{{ item.violated_pattern }}</p>
+    </div>
+    {% endif %}
+    {% if item.actionable_fix %}
+    <div class="rec-field">
+      <span class="rec-label">Full Fix</span>
+      <p>{{ item.actionable_fix }}</p>
+    </div>
+    {% endif %}
+    {% if item.expected_impact %}
+    <div class="rec-field">
+      <span class="rec-label">Expected Outcome</span>
+      <p>{{ item.expected_impact }}</p>
+    </div>
+    {% endif %}
+    {% if item.goal_impact %}
+    <div class="rec-field">
+      <span class="rec-label">Goal Impact</span>
+      <p>{{ item.goal_impact }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+{# type == "friction" #}
+<div class="compact-card sev-{{ item.severity }}">
+  <div class="compact-card-header">
+    <div class="compact-card-title">{{ item.description }}</div>
+    <span class="rec-priority priority-{{ item.severity }}">
+      {% if item.severity == "high" %}HIGH{% elif item.severity == "med" %}MED{% else %}LOW{% endif %}
+    </span>
+  </div>
+  <div class="compact-card-summary">{{ item.root_cause|truncatewords:25 }}</div>
+  {% if item.persona_reasoning or item.root_cause %}
+  <button class="expand-toggle" onclick="toggleDetails(this)">View details</button>
+  <div class="expandable-details">
+    {% if item.root_cause %}
+    <div class="rec-field">
+      <span class="rec-label">Root Cause</span>
+      <p>{{ item.root_cause }}</p>
+    </div>
+    {% endif %}
+    {% if item.persona_reasoning %}
+    <div class="rec-field">
+      <span class="rec-label">Why {{ persona_name }} Struggles</span>
+      <p>{{ item.persona_reasoning }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}

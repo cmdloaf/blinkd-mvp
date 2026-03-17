@@ -375,6 +375,8 @@ blinkd_mvp/
 │   ├── views.py                # Wizard steps, async analysis, loading screen
 │   ├── urls.py                 # URL routing
 │   └── templates/uploads/      # Server-rendered HTML templates
+│       ├── _insight_block.html # Unified insight+recommendation card partial
+│       └── _insight_card.html  # Legacy card partial (friction/rec, kept for compatibility)
 └── .env                        # API keys (gitignored)
 ```
 
@@ -425,10 +427,11 @@ Pattern IDs are internal identifiers used by the LLM for friction tracing. They 
 - `critical_count` = high-priority recs + high-severity friction + goal blockers (non-high-priority recs with "blocker" in goal_impact)
 - `problematic_steps_count` = steps with verdict "Drop" or "Hesitate"
 - `goal_achievable` = achievable status from goal achievability parsing
+- `insight_pairs` = friction items paired with recommendations by `pattern_id` (via `_build_insight_pairs()`). Each entry: `{"insight": friction_item_or_None, "recommendation": rec_or_None}`. Orphan recommendations (no matching friction) are appended at the end.
 
 ### UI Card Design Rules
-- **Recommendation cards**: Title (bold) + summary (muted) + goal impact badge (inline, colored) + "View details" toggle. Expandable details show: "Root Cause", "Violated Pattern", "Full Fix", "Expected Outcome", "Goal Impact".
-- **Friction cards**: Description (bold) + root cause summary (muted) + "View details" toggle. Expandable details show: "Root Cause", "Why [persona] Struggles".
+- **Insight block cards** (`_insight_block.html`): The primary display unit on the analysis results page. Each card shows a friction insight (bold description + muted root cause) paired with its recommendation (rec title + goal impact badge), separated by a subtle divider. Expandable details show: "Root Cause", "Violated Pattern", "Full Fix", "Expected Outcome", "Why [persona] Struggles". Orphan recommendations (no friction match) render as standalone rec cards.
+- **Goal Achievability tile**: Also displays the Product Clarity status (Clear/Mixed/Needs Work) and key concerns from `executive_summary`.
 - No pattern IDs visible to end users. All displayed text is cleaned of bracketed pattern IDs by `clean_llm_output()`.
 
 
