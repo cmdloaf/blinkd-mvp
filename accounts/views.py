@@ -133,10 +133,18 @@ def google_login(request):
     else:
         callback_url = request.build_absolute_uri("/auth/google/callback/")
     try:
-        res = get_supabase().auth.sign_in_with_oauth({
+        client = get_supabase()
+        res = client.auth.sign_in_with_oauth({
             "provider": "google",
             "options": {"redirect_to": callback_url},
         })
+        # PKCE: save code_verifier to Django session so any worker can use it
+        # in the callback (in-memory storage doesn't survive across workers)
+        code_verifier = client.auth._storage.get_item(
+            f"{client.auth._storage_key}-code-verifier"
+        )
+        if code_verifier:
+            request.session["pkce_code_verifier"] = code_verifier
         return redirect(res.url)
     except Exception as e:
         logger.error("Google OAuth initiation failed: %s", e)
@@ -152,7 +160,11 @@ def google_callback(request):
     if not code:
         return redirect("/auth/login/?error=oauth_failed")
     try:
-        res = get_supabase().auth.exchange_code_for_session({"auth_code": code})
+        code_verifier = request.session.pop("pkce_code_verifier", None)
+        res = get_supabase().auth.exchange_code_for_session({
+            "auth_code": code,
+            "code_verifier": code_verifier,
+        })
         if not is_email_allowed(res.user.email):
             return redirect("/auth/login/?error=not_approved")
         user = _sync_user(res.user)
