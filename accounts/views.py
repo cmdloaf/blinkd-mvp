@@ -34,6 +34,11 @@ def _safe_next(request, fallback="/"):
 
 
 def login_view(request):
+    from django.conf import settings
+    app_host = getattr(settings, "APP_HOST", "")
+    if app_host and request.get_host().split(":")[0] != app_host:
+        return redirect(f"https://{app_host}/auth/login/")
+
     if request.user.is_authenticated:
         return redirect(_safe_next(request, reverse("uploads:dashboard")))
 
