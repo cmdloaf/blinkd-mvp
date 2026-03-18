@@ -34,6 +34,8 @@ def _get_sidebar_context(request):
 
 
 def landing(request):
+    if request.user.is_authenticated:
+        return redirect(reverse("uploads:dashboard"))
     return render(request, "uploads/landing.html")
 
 
