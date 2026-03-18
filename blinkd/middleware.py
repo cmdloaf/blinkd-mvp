@@ -36,7 +36,7 @@ class BasicAuthMiddleware:
 
 
 class DomainRedirectMiddleware:
-    """301-redirect configured root domains to the app subdomain."""
+    """301-redirect www to the canonical root domain."""
 
     def __init__(self, get_response):
         self.get_response = get_response

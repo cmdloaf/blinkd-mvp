@@ -40,9 +40,10 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 ).split(",")
 
 DOMAIN_REDIRECTS = {
-    "blinkd.site": "app.blinkd.site",
-    "www.blinkd.site": "app.blinkd.site",
+    "www.blinkd.site": "blinkd.site",  # canonical: www → root
 }
+
+APP_HOST = os.environ.get("APP_HOST", "")  # e.g. "app.blinkd.site" in production
 
 
 # Application definition

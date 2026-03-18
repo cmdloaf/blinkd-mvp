@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -36,6 +37,10 @@ def _get_sidebar_context(request):
 def landing(request):
     if request.user.is_authenticated:
         return redirect(reverse("uploads:dashboard"))
+    host = request.get_host().split(":")[0]
+    app_host = getattr(settings, "APP_HOST", "")
+    if app_host and host == app_host:
+        return redirect(reverse("login"))
     return render(request, "uploads/landing.html")
 
 
