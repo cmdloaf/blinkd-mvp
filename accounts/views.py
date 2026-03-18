@@ -121,7 +121,12 @@ def logout_view(request):
 
 def google_login(request):
     """Redirect user to Supabase Google OAuth flow."""
-    callback_url = request.build_absolute_uri("/auth/google/callback/")
+    from django.conf import settings
+    app_host = getattr(settings, "APP_HOST", "")
+    if app_host:
+        callback_url = f"https://{app_host}/auth/google/callback/"
+    else:
+        callback_url = request.build_absolute_uri("/auth/google/callback/")
     try:
         res = get_supabase().auth.sign_in_with_oauth({
             "provider": "google",

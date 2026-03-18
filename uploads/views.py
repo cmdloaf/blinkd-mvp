@@ -41,7 +41,8 @@ def landing(request):
     app_host = getattr(settings, "APP_HOST", "")
     if app_host and host == app_host:
         return redirect(reverse("login"))
-    return render(request, "uploads/landing.html")
+    login_url = f"https://{app_host}/auth/login/" if app_host else reverse("login")
+    return render(request, "uploads/landing.html", {"login_url": login_url})
 
 
 @login_required
