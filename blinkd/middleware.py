@@ -35,16 +35,32 @@ class BasicAuthMiddleware:
         return response
 
 
+_APP_PATHS = ("/upload/", "/auth/", "/admin/")
+
+
 class DomainRedirectMiddleware:
-    """301-redirect www to the canonical root domain."""
+    """
+    1. 301-redirect www to the canonical root domain.
+    2. 302-redirect app paths (/upload/, /auth/, /admin/) from the marketing
+       domain to APP_HOST, so all app traffic stays on app.blinkd.site.
+    """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         host = request.get_host().split(":")[0]
+        path = request.get_full_path()
+
+        # www → canonical root (301 permanent)
         redirect_map = getattr(settings, "DOMAIN_REDIRECTS", {})
         if host in redirect_map:
             target = redirect_map[host]
-            return HttpResponsePermanentRedirect(f"https://{target}{request.get_full_path()}")
+            return HttpResponsePermanentRedirect(f"https://{target}{path}")
+
+        # app paths on non-app host → app subdomain (302 temporary)
+        app_host = getattr(settings, "APP_HOST", "")
+        if app_host and host != app_host and path.startswith(_APP_PATHS):
+            return HttpResponsePermanentRedirect(f"https://{app_host}{path}")
+
         return self.get_response(request)
