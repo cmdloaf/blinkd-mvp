@@ -13,15 +13,23 @@ logger = logging.getLogger(__name__)
 
 
 def _sync_user(supabase_user):
-    """Get or create a local CustomUser from a Supabase auth user."""
-    user, created = CustomUser.objects.get_or_create(
-        id=supabase_user.id,
-        defaults={"email": supabase_user.email},
-    )
-    if created:
-        # Supabase manages the password — set unusable password on Django side
-        user.set_unusable_password()
-        user.save(update_fields=["password"])
+    """Get or create a local CustomUser from a Supabase auth user.
+
+    Tries lookup by Supabase UUID first, then falls back to email so that
+    users who originally signed up with email/password can also log in via
+    Google OAuth without hitting the unique email constraint.
+    """
+    try:
+        return CustomUser.objects.get(id=supabase_user.id)
+    except CustomUser.DoesNotExist:
+        pass
+    try:
+        return CustomUser.objects.get(email=supabase_user.email)
+    except CustomUser.DoesNotExist:
+        pass
+    user = CustomUser(id=supabase_user.id, email=supabase_user.email)
+    user.set_unusable_password()
+    user.save()
     return user
 
 
