@@ -7,12 +7,21 @@
 {% with insight=pair.insight rec=pair.recommendation %}
 
 {% if insight %}
-<div class="compact-card sev-{{ insight.severity }}">
+<div class="compact-card sev-{{ insight.severity }}"
+     data-severity="{{ insight.severity }}"
+     data-goal-impact="{{ rec.goal_impact|lower }}"
+     data-priority="{{ insight.severity }}">
 
-  {# ── Insight header: number + label (left) / goal-impact + severity badges (right) ── #}
+  {# ── Header: number + label (left) / goal-impact + severity badges (right) ── #}
   <div class="compact-card-header">
     <div style="display:flex;align-items:center;gap:8px;">
-      {% if pair_number %}<span class="pair-number">{{ pair_number }}</span>{% endif %}
+      {% if pair_number %}
+        {% if 'blocker' in rec.goal_impact|lower %}
+          <span class="pair-number pair-number--blocker" title="Goal Blocker">⊗</span>
+        {% else %}
+          <span class="pair-number">{{ pair_number }}</span>
+        {% endif %}
+      {% endif %}
       <span class="rec-label">Insight</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -25,16 +34,20 @@
     </div>
   </div>
 
-  {# ── Insight description ── #}
-  <p class="insight-body-text">{{ insight.description }}</p>
-
-  {# ── Recommendation ── #}
-  {% if rec %}
-  <div class="insight-block-rec">
-    <span class="rec-label">Recommendation</span>
-    <p class="insight-rec-text">{{ rec.actionable_fix|default:rec.observed_problem }}</p>
+  {# ── Two-column body: Friction | Fix ── #}
+  <div class="iblock-body">
+    <div class="iblock-col iblock-col--problem">
+      <span class="rec-label">Friction</span>
+      <p class="iblock-problem-text">{{ insight.description }}</p>
+    </div>
+    {% if rec %}
+    <div class="iblock-col-divider"></div>
+    <div class="iblock-col iblock-col--fix">
+      <span class="rec-label">Fix</span>
+      <p class="iblock-fix-text">{{ rec.title|default:rec.actionable_fix }}</p>
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
 
   {# ── Expandable details ── #}
   {% if rec or insight.persona_reasoning %}
@@ -62,10 +75,19 @@
 
 {% else %}
 {# ── Orphan recommendation (no matching friction item) ── #}
-<div class="compact-card sev-{{ rec.priority }}">
+<div class="compact-card sev-{{ rec.priority }}"
+     data-severity="{{ rec.priority }}"
+     data-goal-impact="{{ rec.goal_impact|lower }}"
+     data-priority="{{ rec.priority }}">
   <div class="compact-card-header">
     <div style="display:flex;align-items:center;gap:8px;">
-      {% if pair_number %}<span class="pair-number">{{ pair_number }}</span>{% endif %}
+      {% if pair_number %}
+        {% if 'blocker' in rec.goal_impact|lower %}
+          <span class="pair-number pair-number--blocker" title="Goal Blocker">⊗</span>
+        {% else %}
+          <span class="pair-number">{{ pair_number }}</span>
+        {% endif %}
+      {% endif %}
       <span class="rec-label">Recommendation</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -77,7 +99,7 @@
       </span>
     </div>
   </div>
-  <p class="insight-body-text">{{ rec.actionable_fix|default:rec.observed_problem }}</p>
+  <p class="iblock-problem-text" style="margin-top:12px;">{{ rec.title|default:rec.actionable_fix }}</p>
   <button class="expand-toggle" onclick="toggleDetails(this)">View details →</button>
   <div class="expandable-details">
     {% if rec.why_it_happens %}

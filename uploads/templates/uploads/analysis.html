@@ -6,9 +6,20 @@
 
 {# ── Page Header ── #}
 <div class="apr-header">
-  <div class="analysis-meta">Persona Analysis</div>
-  <h1 class="apr-header-title">Recommendations</h1>
-  <p class="apr-header-sub">{{ persona_name }}{% if flow.name %} &mdash; {{ flow.name }}{% endif %}</p>
+  <div class="apr-header-left">
+    <div class="analysis-meta">Persona Analysis</div>
+    <h1 class="apr-header-title">Recommendations</h1>
+    <p class="apr-header-sub">{{ persona_name }}{% if flow.name %} &mdash; {{ flow.name }}{% endif %}</p>
+  </div>
+  {% if analysis %}
+  <div class="apr-header-actions">
+    <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline btn-sm">Back to Flow</a>
+    <form method="post" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm">Re-run Analysis</button>
+    </form>
+  </div>
+  {% endif %}
 </div>
 
 {% if analysis %}
@@ -16,108 +27,149 @@
 {% if sections and dashboard %}
 
 
-{# ── C: Goal Achievability + Product Clarity Cards ── #}
-{% if goal_achievability or executive_summary %}
-<div class="summary-cards-grid{% if not executive_summary %} summary-cards-grid--single{% endif %}">
+{# ── Hero Strip ── #}
+{% if goal_achievability or executive_summary or dashboard %}
+<div class="hero-strip">
 
-  {# Left: Goal Achievability #}
-  {% if goal_achievability %}
-  <div class="goal-achievability-tile">
-    <div class="goal-tile-header">
-      <h3>Goal Achievability</h3>
-      <span class="goal-badge {{ goal_achievability.achievable_class }}">{{ goal_achievability.achievable }}</span>
-    </div>
-    <div class="goal-tile-body">
+  {# Zone 1: Goal Status #}
+  <div class="hero-zone">
+    <span class="hero-zone-label">Goal Achievability</span>
+    {% if goal_achievability %}
+      <span class="goal-badge {{ goal_achievability.achievable_class }} hero-badge">{{ goal_achievability.achievable }}</span>
       {% if goal_achievability.stated_goal %}
-      <div class="goal-field">
-        <span class="rec-label">Primary Goal</span>
-        <p>{{ goal_achievability.stated_goal }}</p>
+      <p class="hero-goal-text">{{ goal_achievability.stated_goal }}</p>
+      {% endif %}
+      {% if goal_achievability.dropoff_risk %}
+      <div class="hero-risk-row">
+        <span class="hero-zone-label">Drop-off Risk</span>
+        <span class="goal-risk {{ goal_achievability.dropoff_risk_class }}">{{ goal_achievability.dropoff_risk }}</span>
       </div>
       {% endif %}
-      {% if goal_achievability.breakdown_step and goal_achievability.breakdown_step != "N/A" %}
-      <div class="goal-field">
-        <span class="rec-label">Breaks Down At</span>
-        <p>{{ goal_achievability.breakdown_step }}</p>
-      </div>
-      {% endif %}
-      <div class="goal-meta">
-        <span class="goal-risk {{ goal_achievability.dropoff_risk_class }}">
-          Drop-off Risk: {{ goal_achievability.dropoff_risk }}
-        </span>
-      </div>
-      {% if goal_achievability.root_cause and goal_achievability.root_cause != "N/A" %}
-      <div class="goal-field">
-        <span class="rec-label">Root Cause</span>
-        <p>{{ goal_achievability.root_cause }}</p>
-      </div>
-      {% endif %}
-      {% if goal_achievability.direct_blockers and goal_achievability.direct_blockers != "None identified" %}
-      <div class="goal-field">
-        <span class="rec-label">Direct Blockers</span>
-        <p>{{ goal_achievability.direct_blockers }}</p>
-      </div>
-      {% endif %}
-    </div>
+    {% else %}
+      <span class="goal-badge goal-partial hero-badge">No Data</span>
+    {% endif %}
   </div>
-  {% endif %}
 
-  {# Right: Product Clarity #}
-  {% if executive_summary %}
-  <div class="goal-achievability-tile">
-    <div class="goal-tile-header">
-      <h3>Product Clarity</h3>
+  <div class="hero-divider"></div>
+
+  {# Zone 2: Product Clarity #}
+  <div class="hero-zone">
+    <span class="hero-zone-label">Product Clarity</span>
+    {% if executive_summary %}
       <span class="clarity-badge clarity-{{ executive_summary.clarity_status }}">
         {% if executive_summary.clarity_status == "clear" %}Clear
         {% elif executive_summary.clarity_status == "unclear" %}Needs Work
         {% else %}Mixed Signals{% endif %}
       </span>
-    </div>
-    <div class="goal-tile-body">
       {% if executive_summary.summary %}
-      <div class="goal-field">
-        <p>{{ executive_summary.summary }}</p>
-      </div>
+      <p class="hero-clarity-summary">{{ executive_summary.summary }}</p>
       {% endif %}
-      {% for concern in executive_summary.key_concerns %}
-      <div class="goal-field">
-        <span class="rec-label">{% if forloop.first %}Clarity Status{% else %}Early Confusion Signals{% endif %}</span>
-        <p>{{ concern }}</p>
+      {% if executive_summary.key_concerns %}
+      <ul class="hero-concerns">
+        {% for concern in executive_summary.key_concerns|slice:":2" %}
+        <li>{{ concern }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    {% else %}
+      <span class="clarity-badge clarity-mixed">No Data</span>
+    {% endif %}
+  </div>
+
+  <div class="hero-divider"></div>
+
+  {# Zone 3: Key Metrics #}
+  <div class="hero-zone">
+    <span class="hero-zone-label">At a Glance</span>
+    <div class="hero-metrics-row">
+      <div class="hero-metric">
+        <span class="hero-metric-number {% if dashboard.critical_count > 0 %}hero-metric--critical{% endif %}">{{ dashboard.critical_count }}</span>
+        <span class="hero-metric-label">Critical Issues</span>
       </div>
-      {% endfor %}
+      <div class="hero-metric">
+        <span class="hero-metric-number">{{ dashboard.total_recommendations }}</span>
+        <span class="hero-metric-label">Recommendations</span>
+      </div>
+      <div class="hero-metric">
+        <span class="hero-metric-number {% if dashboard.problematic_steps_count > 0 %}hero-metric--warning{% endif %}">{{ dashboard.problematic_steps_count }}/{{ dashboard.total_steps }}</span>
+        <span class="hero-metric-label">Problem Steps</span>
+      </div>
     </div>
   </div>
-  {% endif %}
 
 </div>
 {% endif %}
 
 
-{# ── E: Insights & Recommendations ── #}
+{# ── Insights & Recommendations ── #}
 {% if dashboard.insight_pairs %}
 <section class="recs-section">
   <div class="recs-section-header">
     <h2 class="section-title">Insights &amp; Recommendations</h2>
     <span class="panel-count">{{ dashboard.insight_pairs|length }}</span>
   </div>
-  <div class="recs-feed">
+
+  {# Filter tabs #}
+  <div class="rec-filter-tabs" role="tablist">
+    <button class="rec-tab rec-tab--active" data-filter="all">
+      All <span class="rec-tab-count">{{ dashboard.insight_pairs|length }}</span>
+    </button>
+    <button class="rec-tab rec-tab--blocker" data-filter="blocker">Goal Blockers</button>
+    <button class="rec-tab" data-filter="high">High</button>
+    <button class="rec-tab" data-filter="med">Medium</button>
+    <button class="rec-tab" data-filter="low">Low</button>
+  </div>
+
+  <div class="recs-feed" id="recs-feed">
     {% for pair in dashboard.insight_pairs %}
     {% include "uploads/_insight_block.html" with pair=pair persona_name=persona_name pair_number=forloop.counter %}
     {% endfor %}
   </div>
+  <div id="recs-empty-state" class="recs-empty" style="display:none;">No items in this category.</div>
 </section>
 {% else %}
 <div class="empty-state">No insights generated.</div>
 {% endif %}
 
-{# ── F: Screenshot + Simulation Feed ── #}
+{# ── Flow Walkthrough ── #}
 {% if simulation_steps %}
 {% with screenshots=flow.screenshots.all %}
 <section class="sim-feed-section">
   <h2 class="section-title">Flow Walkthrough</h2>
+
+  {# Step timeline #}
+  <div class="step-timeline" aria-label="Flow steps overview">
+    {% for step in simulation_steps %}
+    <a href="#sim-step-{{ step.step }}" class="step-node step-node--{{ step.verdict_class }}" title="Step {{ step.step }}: {{ step.verdict }}">
+      <span class="step-node-dot">
+        {% if step.verdict == "Drop" %}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+        {% elif step.verdict == "Hesitate" %}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M5 2v3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="5" cy="7.5" r="0.8" fill="currentColor"/>
+        </svg>
+        {% else %}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5.5l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {% endif %}
+      </span>
+      <span class="step-node-num">{{ step.step }}</span>
+    </a>
+    {% if not forloop.last %}
+    <div class="step-connector {% if step.verdict == 'Drop' %}step-connector--drop{% endif %}"></div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
   <div class="sim-feed">
     {% for step in simulation_steps %}
     {% with step_pos=forloop.counter %}
-    <div class="sim-row" data-step="{{ step.step }}">
+    <div class="sim-row sim-row--{{ step.verdict_class }}" id="sim-step-{{ step.step }}" data-step="{{ step.step }}">
 
       <div class="sim-row-screenshot">
         {% for ss in screenshots %}
@@ -149,14 +201,6 @@
 {% endif %}
 
 <p class="muted" style="margin-top: 24px;">Generated {{ analysis.created_at }}</p>
-
-<div class="button-row">
-  <form method="post" style="display: inline;">
-    {% csrf_token %}
-    <button type="submit" class="btn-outline">Re-run Analysis</button>
-  </form>
-  <a href="{% url 'uploads:confirm' flow_id=flow.id %}" class="btn-outline">Back to Flow</a>
-</div>
 
 {% else %}
 <p>No analysis results yet.</p>
@@ -196,6 +240,38 @@ function toggleCollapsible(sectionId) {
   document.querySelectorAll('.sim-row').forEach(function (row) {
     row.addEventListener('mouseenter', function () { row.classList.add('is-highlighted'); });
     row.addEventListener('mouseleave', function () { row.classList.remove('is-highlighted'); });
+  });
+})();
+
+// Recommendations filter tabs
+(function () {
+  var tabs = document.querySelectorAll('.rec-tab');
+  var emptyState = document.getElementById('recs-empty-state');
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var filter = this.dataset.filter;
+
+      tabs.forEach(function (t) { t.classList.remove('rec-tab--active'); });
+      this.classList.add('rec-tab--active');
+
+      var cards = document.querySelectorAll('#recs-feed .compact-card');
+      var visible = 0;
+      cards.forEach(function (card) {
+        var show = false;
+        if (filter === 'all') {
+          show = true;
+        } else if (filter === 'blocker') {
+          show = (card.dataset.goalImpact || '').indexOf('blocker') !== -1;
+        } else {
+          show = card.dataset.priority === filter;
+        }
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      if (emptyState) emptyState.style.display = visible === 0 ? 'block' : 'none';
+    });
   });
 })();
 </script>
